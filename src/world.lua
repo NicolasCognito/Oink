@@ -11,14 +11,16 @@ local Input = require('systems.input')
 local Bounds = require('systems.bounds')
 local Collect = require('systems.collect')
 local ZombieAI = require('systems.zombie_ai')
+local CollectorAI = require('systems.collector_ai')
 local Spawner = require('systems.spawner')
 
 local function create_world()
   local world = tiny.world()
-  -- Order matters: spawner -> input -> zombie_ai -> move -> bounds -> collect
+  -- Order matters: spawner -> input -> zombie_ai/collector_ai -> move -> bounds -> collect
   world:add(Spawner({ interval = 2, margin = 10 }))
   world:add(Input())
   world:add(ZombieAI({ aggro = 140, speed = 60 }))
+  world:add(CollectorAI())
   world:add(Move())
   world:add(Bounds(0))
   world:add(Collect())

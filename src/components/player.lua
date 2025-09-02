@@ -7,6 +7,7 @@ local function new_player(opts)
     radius = opts.radius or 6,
     drawable = true,
     controllable = true,
+    collector = true,
     player = true,
     score = 0,
     label = opts.label or 'Player',

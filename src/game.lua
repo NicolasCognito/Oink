@@ -9,6 +9,7 @@ local World = require('world')
 local Player = require('components.player')
 local Draw = require('systems.draw')
 local Zombie = require('components.zombie')
+local TaxCollector = require('components.tax_collector')
 
 local M = {}
 
@@ -19,6 +20,9 @@ function M.load()
   -- Add a zombie to demonstrate FSM behavior
   M.zombie = Zombie.new({ x = 260, y = 120, speed = 60, radius = 6, label = 'Zombie' })
   M.world:add(M.zombie)
+  -- Add a tax collector agent
+  M.collector = TaxCollector.new({ x = 160, y = 160, speed = 120, radius = 6, label = 'Collector' })
+  M.world:add(M.collector)
 end
 
 function M.update(dt)

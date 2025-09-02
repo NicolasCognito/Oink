@@ -12,7 +12,7 @@ describe('collect system', function()
   it('removes coin and increments score on overlap', function()
     local sys = Collect()
     local w = tiny.world(sys)
-    local player = { pos = {x=0,y=0}, radius = 5, player = true, score = 0 }
+    local player = { pos = {x=0,y=0}, radius = 5, player = true, collector = true, score = 0 }
     local coin = { pos = {x=3,y=4}, radius = 1, coin = true }
     w:add(player)
     w:add(coin)
@@ -29,4 +29,3 @@ describe('collect system', function()
     end
   end)
 end)
-
