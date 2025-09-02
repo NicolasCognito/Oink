@@ -6,14 +6,14 @@ package.path = table.concat({
 }, ';')
 
 local tiny = require('tiny')
-local ZombieAI = require('systems.zombie_ai')
+local Agents = require('systems.agents')
+local ZombieDef = require('FSMs.zombie')
 
 describe('zombie fsm', function()
   it('idles when far and chases when near', function()
-    local ai = ZombieAI({ aggro = 50, speed = 10 })
-    local w = tiny.world(ai)
+    local w = tiny.world(Agents())
     local player = { pos = {x=0,y=0}, radius=6, player=true }
-    local zombie = { pos = {x=200,y=0}, vel={x=0,y=0}, radius=6, zombie=true }
+    local zombie = { pos = {x=200,y=0}, vel={x=0,y=0}, radius=6, zombie=true, brain={ fsm_def = ZombieDef }, speed=10, aggro=50 }
     w:add(player)
     w:add(zombie)
     w:update(0) -- apply
@@ -31,4 +31,3 @@ describe('zombie fsm', function()
     assert.is_true(zombie.vel.x < 0)
   end)
 end)
-

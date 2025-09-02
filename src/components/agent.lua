@@ -1,6 +1,7 @@
 local function new_agent(opts)
   opts = opts or {}
   return {
+    agent = true,
     pos = { x = opts.x or 0, y = opts.y or 0 },
     vel = { x = 0, y = 0 },
     speed = opts.speed or 60,
@@ -12,4 +13,3 @@ local function new_agent(opts)
 end
 
 return { new = new_agent }
-

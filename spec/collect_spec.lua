@@ -12,8 +12,9 @@ describe('collect system', function()
   it('removes coin and increments score on overlap', function()
     local sys = Collect()
     local w = tiny.world(sys)
-    local player = { pos = {x=0,y=0}, radius = 5, player = true, collector = true, score = 0 }
-    local coin = { pos = {x=3,y=4}, radius = 1, coin = true }
+local Inventory = require('inventory')
+local player = { pos = {x=0,y=0}, radius = 5, player = true, collector = true, inventory = Inventory.new(5) }
+local coin = { pos = {x=3,y=4}, radius = 1, coin = true, collectable = { name='coin', value = 1 } }
     w:add(player)
     w:add(coin)
     -- first update applies additions
@@ -23,7 +24,8 @@ describe('collect system', function()
     -- removal is queued; apply on next manage
     w:update(0)
     -- verify coin removed and score incremented
-    assert.is_true(player.score == 1)
+    assert.are.equal(1, player.inventory.count)
+    assert.are.equal(1, player.inventory.value)
     for i = 1, #w.entities do
       assert.is_true(w.entities[i] ~= coin)
     end

@@ -7,16 +7,17 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local move = require('ai.movement')
+local Inventory = require('inventory')
 
 return function(opts)
   opts = opts or {}
   local sys = tiny.processingSystem()
   sys.filter = function(self, e)
-    return e.collector and e.pos and e.vel and not e.controllable
+    return e.collector and e.pos and e.vel and e.inventory and not e.controllable
   end
 
   function sys:preProcess(dt)
-    -- Gather current coins
+    -- Gather current coins only
     self._coins = {}
     local idx = 1
     for i = 1, #self.world.entities do
@@ -29,6 +30,10 @@ return function(opts)
   end
 
   function sys:process(e, dt)
+    if e.inventory and Inventory.isFull(e.inventory) then
+      e.vel.x, e.vel.y = 0, 0
+      return
+    end
     -- Find nearest coin
     local coins = self._coins
     if not coins or #coins == 0 then
@@ -49,4 +54,3 @@ return function(opts)
 
   return sys
 end
-

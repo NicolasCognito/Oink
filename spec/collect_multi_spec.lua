@@ -12,18 +12,19 @@ describe('collect system (generic collectors)', function()
   it('credits the overlapping collector and removes the coin', function()
     local sys = Collect()
     local w = tiny.world(sys)
-    local c1 = { pos={x=0,y=0}, radius=4, collector=true, score=0 }
-    local c2 = { pos={x=100,y=0}, radius=4, collector=true, score=0 }
-    local coin = { pos={x=2,y=0}, radius=1, coin=true }
+local Inventory = require('inventory')
+local c1 = { pos={x=0,y=0}, radius=4, collector=true, inventory = Inventory.new(10) }
+local c2 = { pos={x=100,y=0}, radius=4, collector=true, inventory = Inventory.new(10) }
+local coin = { pos={x=2,y=0}, radius=1, coin=true, collectable = { name='coin', value=1 } }
     w:add(c1); w:add(c2); w:add(coin)
     w:update(0) -- apply
     w:update(0.016) -- process
     w:update(0) -- apply removals
-    assert.are.equal(1, c1.score)
-    assert.are.equal(0, c2.score)
+    assert.are.equal(1, c1.inventory.count)
+    assert.are.equal(1, c1.inventory.value)
+    assert.are.equal(0, c2.inventory.count)
     for i = 1, #w.entities do
       assert.is_true(w.entities[i] ~= coin)
     end
   end)
 end)
-

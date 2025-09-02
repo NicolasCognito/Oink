@@ -7,10 +7,11 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local collision = require('collision')
+local Inventory = require('inventory')
 
 return function()
   local sys = tiny.processingSystem()
-  sys.filter = tiny.requireAll('coin', 'pos')
+  sys.filter = tiny.requireAll('collectable', 'pos')
   sys.collectors = nil
 
   local function refresh_collectors(self)
@@ -18,7 +19,7 @@ return function()
     local idx = 1
     for i = 1, #self.world.entities do
       local ent = self.world.entities[i]
-      if ent and ent.collector and ent.pos then
+      if ent and ent.collector and ent.pos and ent.inventory then
         self.collectors[idx] = ent
         idx = idx + 1
       end
@@ -36,8 +37,11 @@ return function()
       local c = self.collectors[i]
       local rr = c.radius or 0
       if collision.circles_overlap(c.pos, rr, coin.pos, cr) then
-        c.score = (c.score or 0) + 1
-        self.world:remove(coin)
+        local inv = c.inventory
+        local data = coin.collectable or { name = 'item', value = 0 }
+        if inv and Inventory.add(inv, data.name, data.value) then
+          self.world:remove(coin)
+        end
         break
       end
     end
