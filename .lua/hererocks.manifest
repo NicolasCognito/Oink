@@ -1,0 +1,1 @@
+{"lua": {"name": "Lua", "source": "release", "version": "5.4.4", "target": "linux", "compat": "default", "c flags": "", "location": "/mnt/e/LOVE/Oink/.lua", "major version": "5.4", "readline": "false", "patched": "false"}, "version": 3}

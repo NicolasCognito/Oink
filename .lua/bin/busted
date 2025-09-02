@@ -1,0 +1,3 @@
+#!/bin/sh
+
+LUAROCKS_SYSCONFDIR='/mnt/e/LOVE/Oink/.lua/etc/luarocks' exec '/mnt/e/LOVE/Oink/.lua/bin/lua' -e 'package.path="/mnt/e/LOVE/Oink/.lua/share/lua/5.4/?.lua;/mnt/e/LOVE/Oink/.lua/share/lua/5.4/?/init.lua;"..package.path;package.cpath="/mnt/e/LOVE/Oink/.lua/lib/lua/5.4/?.so;"..package.cpath;local k,l,_=pcall(require,"luarocks.loader") _=k and l.add_context("busted","2.2.0-1")' '/mnt/e/LOVE/Oink/.lua/lib/luarocks/rocks-5.4/busted/2.2.0-1/bin/busted' "$@"

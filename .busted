@@ -1,0 +1,10 @@
+return {
+  default = {
+    verbose = true,
+    lua = "./.lua/bin/lua",
+    paths = {
+      "src/?.lua;src/?/init.lua;libs/?.lua;libs/?/init.lua;libs/tiny-ecs/?.lua;libs/tiny-ecs/?/init.lua;?.lua;?/init.lua"
+    }
+  }
+}
+

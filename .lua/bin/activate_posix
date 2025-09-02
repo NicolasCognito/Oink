@@ -1,0 +1,22 @@
+s=$(command -V deactivate_lua 2>&1)
+if [ $? -eq 0 ]; then
+    if [ "${s##*function*}" = '' ]; then
+        deactivate_lua
+    fi;
+fi;
+
+deactivate_lua () {
+    if [ -x '/mnt/e/LOVE/Oink/.lua/bin/lua' ]; then
+        PATH=`'/mnt/e/LOVE/Oink/.lua/bin/lua' '/mnt/e/LOVE/Oink/.lua/bin/get_deactivated_path.lua'`
+        export PATH
+
+        hash -r 2>/dev/null
+    fi
+
+    unset -f deactivate_lua
+}
+
+PATH='/mnt/e/LOVE/Oink/.lua/bin':"$PATH"
+export PATH
+
+hash -r 2>/dev/null
