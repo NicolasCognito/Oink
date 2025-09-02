@@ -22,14 +22,14 @@ local function contains(rect, x, y)
   return x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h
 end
 
-local function on_tick(zone, world, agents)
+local function on_tick(zone, ctx)
   if not zone.active then return end
-  agents = agents or {}
+  local agents = ctx.agents or {}
   local rect = zone.rect or {x=0,y=0,w=0,h=0}
   for i = 1, #agents do
     local a = agents[i]
     if a and a.pos and contains(rect, a.pos.x, a.pos.y) then
-      world:remove(a)
+      ctx.world:remove(a)
       zone.active = false
       break
     end

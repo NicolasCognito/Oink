@@ -14,6 +14,10 @@ local function new_player(opts)
   e.collector = true
   e.player = true
   e.inventory = Inventory.new(opts.inventory_cap or 20)
+  -- Player collects every collectable by default; override if needed
+  e.accept_collectable = function(self, item)
+    return item ~= nil and item.collectable ~= nil
+  end
   return e
 end
 

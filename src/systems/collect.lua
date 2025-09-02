@@ -28,6 +28,26 @@ return function()
 
   function sys:preProcess(dt)
     refresh_collectors(self)
+    -- Snapshot all collectables for per-collector queries
+    local items = {}
+    local ii = 1
+    for i = 1, #self.world.entities do
+      local e = self.world.entities[i]
+      if e and e.collectable and e.pos then items[ii] = e; ii = ii + 1 end
+    end
+    self._collectables = items
+    -- Build membership sets for collectors with custom queries
+    self._collector_sets = {}
+    local ctx = { world = self.world, collectables = self._collectables }
+    for i = 1, #self.collectors do
+      local c = self.collectors[i]
+      if c.collect_query then
+        local list = c.collect_query(c, ctx) or {}
+        local set = {}
+        for j = 1, #list do set[list[j]] = true end
+        self._collector_sets[c] = set
+      end
+    end
   end
 
   function sys:process(coin, dt)
@@ -36,7 +56,17 @@ return function()
     for i = 1, #self.collectors do
       local c = self.collectors[i]
       local rr = c.radius or 0
-      if collision.circles_overlap(c.pos, rr, coin.pos, cr) then
+      -- Check collector's desired items: either membership via collect_query set, or accept_collectable predicate
+      local allowed = false
+      local set = self._collector_sets and self._collector_sets[c]
+      if set then
+        allowed = set[coin] == true
+      elseif c.accept_collectable then
+        allowed = c.accept_collectable(c, coin)
+      else
+        allowed = false
+      end
+      if allowed and collision.circles_overlap(c.pos, rr, coin.pos, cr) then
         local inv = c.inventory
         local data = coin.collectable or { name = 'item', value = 0 }
         if inv and Inventory.add(inv, data.name, data.value) then

@@ -13,7 +13,8 @@ describe('collect system', function()
     local sys = Collect()
     local w = tiny.world(sys)
 local Inventory = require('inventory')
-local player = { pos = {x=0,y=0}, radius = 5, player = true, collector = true, inventory = Inventory.new(5) }
+local player = { pos = {x=0,y=0}, radius = 5, player = true, collector = true, inventory = Inventory.new(5),
+  accept_collectable = function(self, item) return item and item.collectable and item.collectable.name=='coin' end }
 local coin = { pos = {x=3,y=4}, radius = 1, coin = true, collectable = { name='coin', value = 1 } }
     w:add(player)
     w:add(coin)

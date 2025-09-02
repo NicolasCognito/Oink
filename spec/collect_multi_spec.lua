@@ -13,8 +13,10 @@ describe('collect system (generic collectors)', function()
     local sys = Collect()
     local w = tiny.world(sys)
 local Inventory = require('inventory')
-local c1 = { pos={x=0,y=0}, radius=4, collector=true, inventory = Inventory.new(10) }
-local c2 = { pos={x=100,y=0}, radius=4, collector=true, inventory = Inventory.new(10) }
+local c1 = { pos={x=0,y=0}, radius=4, collector=true, inventory = Inventory.new(10),
+  accept_collectable = function(self, item) return item and item.collectable and item.collectable.name=='coin' end }
+local c2 = { pos={x=100,y=0}, radius=4, collector=true, inventory = Inventory.new(10),
+  accept_collectable = function(self, item) return item and item.collectable and item.collectable.name=='coin' end }
 local coin = { pos={x=2,y=0}, radius=1, coin=true, collectable = { name='coin', value=1 } }
     w:add(c1); w:add(c2); w:add(coin)
     w:update(0) -- apply

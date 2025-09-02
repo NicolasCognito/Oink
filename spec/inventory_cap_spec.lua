@@ -13,7 +13,8 @@ describe('inventory cap', function()
   it('prevents collection when full', function()
     local sys = Collect()
     local w = tiny.world(sys)
-    local c = { pos={x=0,y=0}, radius=4, collector=true, inventory = Inventory.new(1) }
+    local c = { pos={x=0,y=0}, radius=4, collector=true, inventory = Inventory.new(1),
+      accept_collectable = function(self, item) return item and item.collectable and item.collectable.name=='coin' end }
     local coin1 = { pos={x=0,y=0}, radius=1, coin=true, collectable={name='coin', value=1} }
     local coin2 = { pos={x=0,y=0}, radius=1, coin=true, collectable={name='coin', value=1} }
     w:add(c); w:add(coin1); w:add(coin2)
@@ -28,4 +29,3 @@ describe('inventory cap', function()
     assert.is_true(found)
   end)
 end)
-

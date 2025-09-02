@@ -34,6 +34,15 @@ return function(opts)
       end
     end
     self._ctx.coins = coins
+
+    -- Collect zones
+    local zones = {}
+    local zi = 1
+    for i = 1, #self.world.entities do
+      local e = self.world.entities[i]
+      if e and e.zone then zones[zi] = e; zi = zi + 1 end
+    end
+    self._ctx.zones = zones
   end
 
   function sys:process(e, dt)
@@ -43,4 +52,3 @@ return function(opts)
 
   return sys
 end
-

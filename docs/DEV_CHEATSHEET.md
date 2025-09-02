@@ -8,12 +8,20 @@ This repo is set up to develop game logic with tiny-ecs, run the game in LÖVE, 
 - Game orchestration split into modules (game/world/components/systems).
 - Tests run without LÖVE; only effect systems (e.g., input, draw) need `love.*`.
 
+## Core Systems
+- Agents: single system that runs per-entity FSM “brains”. Each agent has `brain = { fsm_def = require('FSMs.<name>') }`; the system builds a per-frame context and steps `libs/fsm.lua` for every agent.
+- Zones: generic system that builds a per-frame context (`ctx`) and invokes zone callbacks; no zone-specific logic here.
+
 ## Project Layout
 - `main.lua`: LÖVE entry. Sets require paths, delegates to `src/game.lua`.
 - `src/game.lua`: Orchestrates world lifecycle (`Game.load/update/draw`).
 - `src/world.lua`: Builds tiny-ecs world; registers systems.
 - `src/components/`: Component factories (plain data tables).
+- `src/FSMs/`: Declarative FSMs for agents (e.g., `zombie.lua`, `tax_collector.lua`).
 - `src/systems/`: Systems (prefer pure logic; effect systems may use `love.*`).
+  - `agents.lua`: Runs FSM brains with a per-frame context.
+  - `zones.lua`: Calls zone callbacks with a per-frame context.
+  - `zone_collect.lua`: Generic absorption of collectables by rectangular zones with `collector` + `inventory`.
 - `libs/`: Vendored libraries (tiny-ecs at `libs/tiny.lua`).
 - `spec/`: Busted tests (`spec/support/love_stub.lua` available if needed).
 - `.busted`: Configures search paths and uses `./.lua/bin/lua`.
@@ -40,10 +48,15 @@ This keeps tests and LÖVE consistent.
 - Optionally stub `love` in tests using `spec/support/love_stub.lua`.
 - Keep components as plain tables (e.g., `pos`, `vel`, `sprite`).
 - System order is gameplay-dependent; define it deliberately in `world.lua`.
+- Agents: attach behaviors via `brain.fsm_def`; keep stateful data on entities; use helpers.
+- Zones: keep behavior in zone files; use system-provided `ctx` to query entities.
+  - Common collection is handled by `zone_collect.lua` (rect contains collectables → inventory.add → remove item).
 
 ## Examples (Generic)
 - Logic systems: filters via `tiny.requireAll/Any`, updates component data.
 - Effect systems: render via `love.graphics.*`, play sounds via `love.audio.*`, read input via `love.keyboard.*`.
+- Agents: define FSMs under `src/FSMs/` and reference them in components via `brain.fsm_def`.
+- Zones: implement callbacks (`on_tick(zone, ctx)`, optional `on_update(zone, ctx)`) in `src/Zones/*`.
 
 ## Version Notes
 - LÖVE uses LuaJIT (Lua 5.1 semantics). The local toolchain here is Lua 5.4.
@@ -61,11 +74,15 @@ This keeps tests and LÖVE consistent.
 - Effect-system isolation: provide injectable dependencies (e.g., size providers) to avoid stubbing `love`.
 - Reporter hint: for clearer failures, `-o gtest` can be used (e.g., `.lua/bin/busted -v -o gtest path/to/spec.lua`).
 - Pure logic first: prefer testing systems that avoid `love.*`; stub only when necessary.
+- FSMs: test via `systems/agents` with a minimal world; attach `brain` to test entities and assert velocity/state changes.
+- Zones: unit-test zone callbacks by constructing zones/entities and invoking the zones system; use `ctx` instead of scanning the world in zone code.
 
 ## Tuning and Hooks (General)
 - Systems can accept options (e.g., margins, limits) to decouple them from LÖVE and improve testability.
 - Input systems typically normalize direction vectors and scale by per-entity speed.
 - Determinism: seed RNG in `love.load()` if reproducibility is needed.
+- Inventory/Collectables: attach `inventory` to collectors and `collectable={name,value}` to items; keep caps in inventory.
+- Context (`ctx`): zones system provides `{ world, dt, agents, collectables, zones, query(...) }` per frame for zone logic.
 
 ## Troubleshooting
 - Error: `module 'tiny' not found`

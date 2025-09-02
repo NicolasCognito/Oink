@@ -12,17 +12,20 @@ local Bounds = require('systems.bounds')
 local Collect = require('systems.collect')
 local Agents = require('systems.agents')
 local Zones = require('systems.zones')
+local ZoneCollect = require('systems.zone_collect')
 local Spawner = require('systems.spawner')
 
 local function create_world()
   local world = tiny.world()
-  -- Order matters: spawner -> input -> agents -> move -> bounds -> zones -> collect
-  world:add(Spawner({ interval = 2, margin = 10 }))
+  -- Order matters (zones and zone_collect before agents):
+  -- spawner -> input -> zones -> zone_collect -> agents -> move -> bounds -> collect
+  world:add(Spawner({ interval = 0.5, margin = 10 }))
   world:add(Input())
+  world:add(Zones())
+  world:add(ZoneCollect())
   world:add(Agents())
   world:add(Move())
   world:add(Bounds(0))
-  world:add(Zones())
   world:add(Collect())
   return world
 end

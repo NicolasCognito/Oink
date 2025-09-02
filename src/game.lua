@@ -11,6 +11,7 @@ local Draw = require('systems.draw')
 local Zombie = require('components.zombie')
 local TaxCollector = require('components.tax_collector')
 local BearTrap = require('Zones.bear_trap')
+local Vault = require('Zones.vault')
 
 local M = {}
 
@@ -32,6 +33,9 @@ function M.load()
   M.trap = BearTrap.new(220, 100, 30, 30, { label = 'Trap' })
   M.trap.on_tick = BearTrap.on_tick
   M.world:add(M.trap)
+  -- Add a vault zone to absorb coins (handled by zone_collect system)
+  M.vault = Vault.new(40, 200, 40, 24, { label = 'Vault' })
+  M.world:add(M.vault)
 end
 
 function M.update(dt)
