@@ -6,7 +6,7 @@ package.path = table.concat({
 }, ';')
 
 local tiny = require('tiny')
-local Spawner = require('systems.spawner')
+local Spawner = require('systems.coin_spawner')
 
 describe('spawner system', function()
   it('spawns coins on interval', function()

@@ -12,7 +12,7 @@ This file tracks project-specific decisions for the current playable demo. Keep 
 - Zones: Generic zones system calls zone callbacks each frame with a per-frame context.
 
 ## System Order (World)
-- spawner → input → zones → zone_collect → agents → move → bounds → collect
+- input → context → zones → zone_collect → agents → move → bounds → collect → destroyer → spawner
 - Draw is invoked from `Game.draw()` (not a tiny-ecs system) and renders zones first.
 
 ## Components
@@ -30,6 +30,8 @@ This file tracks project-specific decisions for the current playable demo. Keep 
 - Inventory caps: `Inventory.new(cap)` for player/collector.
 - Agent FSMs: adjust aggro/speed via entity fields or FSM ctx.
 - Zones: implement `on_tick(zone, ctx)` to run logic each frame; use `ctx.agents/collectables/zones`.
+- Context provider: `systems/context_provider.lua` sets `src/ctx.lua` per frame.
+- Spawns/Destroy: request via `libs/spawn.lua` or set `marked_for_destruction` and let systems apply at frame end.
 - Zone collectors: tag zone with `collector=true`, give it `inventory`, and `zone_collect` will absorb coins or filters via `zone.accept_collectable`.
 
 ## Testing Notes

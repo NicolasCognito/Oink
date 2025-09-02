@@ -7,6 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local fsm = require('fsm')
+local ctx = require('ctx')
 
 return function(opts)
   opts = opts or {}
@@ -15,39 +16,10 @@ return function(opts)
     return e.pos and e.vel and e.brain and e.brain.fsm_def
   end
 
-  function sys:preProcess(dt)
-    -- Build shared context per frame
-    self._ctx = { dt = dt }
-    -- Locate player
-    for i = 1, #self.world.entities do
-      local e = self.world.entities[i]
-      if e and e.player then self._ctx.player = e; break end
-    end
-    -- Collect coins list for convenience
-    local coins = {}
-    local idx = 1
-    for i = 1, #self.world.entities do
-      local e = self.world.entities[i]
-      if e and e.coin and e.pos then
-        coins[idx] = e
-        idx = idx + 1
-      end
-    end
-    self._ctx.coins = coins
-
-    -- Collect zones
-    local zones = {}
-    local zi = 1
-    for i = 1, #self.world.entities do
-      local e = self.world.entities[i]
-      if e and e.zone then zones[zi] = e; zi = zi + 1 end
-    end
-    self._ctx.zones = zones
-  end
-
   function sys:process(e, dt)
     fsm.ensure(e, e.brain.fsm_def)
-    fsm.step(e, self._ctx, dt)
+    local snapshot = ctx.get(self.world, dt)
+    fsm.step(e, snapshot, dt)
   end
 
   return sys

@@ -6,18 +6,16 @@ package.path = table.concat({
 }, ';')
 
 local tiny = require('tiny')
-local spawn = require('spawn')
 
 return function()
   local sys = tiny.system()
   function sys:update(dt)
-    local pending = spawn.pending()
-    if #pending > 0 then
-      for i = 1, #pending do
-        local e = pending[i]
-        if e then self.world:add(e) end
+    local entities = self.world.entities
+    for i = 1, #entities do
+      local e = entities[i]
+      if e and e.marked_for_destruction then
+        self.world:remove(e)
       end
-      spawn.drain()
     end
   end
   return sys

@@ -9,19 +9,25 @@ This repo is set up to develop game logic with tiny-ecs, run the game in LÖVE, 
 - Tests run without LÖVE; only effect systems (e.g., input, draw) need `love.*`.
 
 ## Core Systems
-- Agents: single system that runs per-entity FSM “brains”. Each agent has `brain = { fsm_def = require('FSMs.<name>') }`; the system builds a per-frame context and steps `libs/fsm.lua` for every agent.
-- Zones: generic system that builds a per-frame context (`ctx`) and invokes zone callbacks; no zone-specific logic here.
+- Context: builds a per-frame snapshot (`src/ctx.lua`) and shares it with systems. Provided by `systems/context_provider.lua`.
+- Agents: single system that runs per-entity FSM “brains”. Each agent has `brain = { fsm_def = require('FSMs.<name>') }`; the system reads `ctx` and steps `libs/fsm.lua` for every agent.
+- Zones: generic system that reads `ctx` and invokes zone callbacks; no zone-specific logic here.
 
 ## Project Layout
 - `main.lua`: LÖVE entry. Sets require paths, delegates to `src/game.lua`.
 - `src/game.lua`: Orchestrates world lifecycle (`Game.load/update/draw`).
 - `src/world.lua`: Builds tiny-ecs world; registers systems.
+- `src/ctx.lua`: Per-frame context module (`set/get` + lazy snapshot builder).
 - `src/components/`: Component factories (plain data tables).
 - `src/FSMs/`: Declarative FSMs for agents (e.g., `zombie.lua`, `tax_collector.lua`).
 - `src/systems/`: Systems (prefer pure logic; effect systems may use `love.*`).
+  - `context_provider.lua`: Produces `ctx` each frame.
   - `agents.lua`: Runs FSM brains with a per-frame context.
   - `zones.lua`: Calls zone callbacks with a per-frame context.
   - `zone_collect.lua`: Generic absorption of collectables by rectangular zones with `collector` + `inventory`.
+  - `coin_spawner.lua`: Periodic coin spawning.
+  - `spawner.lua`: Drains queued spawn requests.
+  - `destroyer.lua`: Removes entities marked for destruction.
 - `libs/`: Vendored libraries (tiny-ecs at `libs/tiny.lua`).
 - `spec/`: Busted tests (`spec/support/love_stub.lua` available if needed).
 - `.busted`: Configures search paths and uses `./.lua/bin/lua`.
@@ -47,7 +53,8 @@ This keeps tests and LÖVE consistent.
 - Use effect systems for rendering/audio/input that call `love.*`.
 - Optionally stub `love` in tests using `spec/support/love_stub.lua`.
 - Keep components as plain tables (e.g., `pos`, `vel`, `sprite`).
-- System order is gameplay-dependent; define it deliberately in `world.lua`.
+ - System order is gameplay-dependent; define it deliberately in `world.lua`.
+ - Current order (runtime): `input → context → zones → zone_collect → agents → move → bounds → collect → destroyer → spawner`.
 - Agents: attach behaviors via `brain.fsm_def`; keep stateful data on entities; use helpers.
 - Zones: keep behavior in zone files; use system-provided `ctx` to query entities.
   - Common collection is handled by `zone_collect.lua` (rect contains collectables → inventory.add → remove item).
@@ -57,6 +64,7 @@ This keeps tests and LÖVE consistent.
 - Effect systems: render via `love.graphics.*`, play sounds via `love.audio.*`, read input via `love.keyboard.*`.
 - Agents: define FSMs under `src/FSMs/` and reference them in components via `brain.fsm_def`.
 - Zones: implement callbacks (`on_tick(zone, ctx)`, optional `on_update(zone, ctx)`) in `src/Zones/*`.
+ - Context: access via `local C = require('ctx'); local snapshot = C.get(world, dt)`; context_provider sets it each frame.
 
 ## Version Notes
 - LÖVE uses LuaJIT (Lua 5.1 semantics). The local toolchain here is Lua 5.4.
@@ -83,6 +91,9 @@ This keeps tests and LÖVE consistent.
 - Determinism: seed RNG in `love.load()` if reproducibility is needed.
 - Inventory/Collectables: attach `inventory` to collectors and `collectable={name,value}` to items; keep caps in inventory.
 - Context (`ctx`): zones system provides `{ world, dt, agents, collectables, zones, query(...) }` per frame for zone logic.
+- Spawn/Destroy:
+  - Spawn queue: `local spawn = require('spawn'); spawn.request(entity)`; `systems/spawner` drains it at end of frame.
+  - Destroy: set `entity.marked_for_destruction = true`; `systems/destroyer` removes it at end of frame.
 
 ## Troubleshooting
 - Error: `module 'tiny' not found`

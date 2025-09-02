@@ -12,6 +12,7 @@ local Zombie = require('components.zombie')
 local TaxCollector = require('components.tax_collector')
 local BearTrap = require('Zones.bear_trap')
 local Vault = require('Zones.vault')
+local Chicken = require('components.chicken')
 
 local M = {}
 
@@ -36,6 +37,9 @@ function M.load()
   -- Add a vault zone to absorb coins (handled by zone_collect system)
   M.vault = Vault.new(40, 200, 40, 24, { label = 'Vault' })
   M.world:add(M.vault)
+  -- Add a chicken agent
+  M.chicken = Chicken.new({ x = 120, y = 60, egg_interval = 4, egg_ttl = 12, speed = 70 })
+  M.world:add(M.chicken)
 end
 
 function M.update(dt)
