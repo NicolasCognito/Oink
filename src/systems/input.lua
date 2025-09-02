@@ -9,6 +9,7 @@ local tiny = require('tiny')
 return function()
   local sys = tiny.system()
   sys.filter = tiny.requireAll('vel', 'controllable')
+  sys._mode_cd = 0
 
   function sys:update(dt)
     local up    = love.keyboard.isDown('w') or love.keyboard.isDown('up')
@@ -30,8 +31,32 @@ return function()
         e.vel.y = 0
       end
     end
+
+    -- Mode switching for zones: press Q/E while overlapping
+    self._mode_cd = math.max(0, (self._mode_cd or 0) - (dt or 0))
+    local want = 0
+    if love.keyboard.isDown('q') then want = -1 end
+    if love.keyboard.isDown('e') then want = 1 end
+    if want ~= 0 and self._mode_cd == 0 then
+      -- For each controllable, check overlapping zones
+      local entities = self.world.entities
+      for _, p in ipairs(self.entities) do
+        if p.pos then
+          for i = 1, #entities do
+            local z = entities[i]
+            if z and z.zone and z.rect and z.on_mode_switch then
+              local r = z.rect
+              local px, py = p.pos.x, p.pos.y
+              if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
+                z.on_mode_switch(z, want)
+              end
+            end
+          end
+        end
+      end
+      self._mode_cd = 0.25
+    end
   end
 
   return sys
 end
-
