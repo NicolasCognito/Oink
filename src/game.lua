@@ -33,7 +33,7 @@ function M.load()
   M.world:add(M.zombie)
   -- Add a second zombie and make it collectable (for testing generic collection)
   M.zombie2 = Zombie.new({ x = 320, y = 140, speed = 60, radius = 6, label = 'LootZombie' })
-  M.zombie2.collectable = { name = 'zombie', value = 5 }
+  M.zombie2.collectable = { name = 'zombie', value = 5, persistent = true }
   M.world:add(M.zombie2)
   -- Add a tax collector agent
   M.collector = TaxCollector.new({ x = 160, y = 160, speed = 120, radius = 6, label = 'Collector' })

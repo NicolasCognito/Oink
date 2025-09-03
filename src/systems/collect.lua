@@ -53,6 +53,10 @@ return function()
   function sys:process(coin, dt)
     if not self.collectors or #self.collectors == 0 then return end
     if coin.marked_for_destruction then return end
+    if coin.just_dropped_cd and (coin.just_dropped_cd or 0) > 0 then
+      coin.just_dropped_cd = math.max(0, (coin.just_dropped_cd or 0) - (dt or 0))
+      return
+    end
     local cr = coin.radius or 0
     for i = 1, #self.collectors do
       local c = self.collectors[i]
@@ -70,8 +74,12 @@ return function()
       if allowed and collision.circles_overlap(c.pos, rr, coin.pos, cr) then
         local inv = c.inventory
         local data = coin.collectable or { name = 'item', value = 0 }
-        if inv and Inventory.add(inv, data.name, data.value) then
-          self.world:remove(coin)
+        if inv then
+          if data.persistent then
+            if Inventory.add_entity(inv, coin) then self.world:remove(coin) end
+          else
+            if Inventory.add(inv, data.name, data.value) then self.world:remove(coin) end
+          end
         end
         break
       end

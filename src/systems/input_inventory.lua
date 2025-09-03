@@ -74,8 +74,17 @@ return function()
       if idx and inv.slots and inv.slots[idx] then
         local removed = Inventory.remove_one(inv, idx)
         if removed and player.pos then
-          local item = spawn_item(removed.name, removed.value, player.pos.x, player.pos.y)
-          spawn.request(item)
+          if removed.entity then
+            local e = removed.entity
+            e.pos = e.pos or { x = 0, y = 0 }
+            e.pos.x, e.pos.y = player.pos.x, player.pos.y
+            e.just_dropped_cd = 1.0
+            spawn.request(e)
+          else
+            local item = spawn_item(removed.name, removed.value, player.pos.x, player.pos.y)
+            item.just_dropped_cd = 1.0
+            spawn.request(item)
+          end
         end
       end
     end
@@ -83,4 +92,3 @@ return function()
 
   return sys
 end
-

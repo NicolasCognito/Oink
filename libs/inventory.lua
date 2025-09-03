@@ -45,11 +45,38 @@ function M.add(inv, name, value)
   return true
 end
 
+-- Add a persistent entity into a dedicated slot (no stacking by slot, but summary increases)
+function M.add_entity(inv, entity)
+  if not inv or not entity then return false end
+  if M.isFull(inv) then return false end
+  local name = (entity.collectable and entity.collectable.name) or 'item'
+  local value = (entity.collectable and entity.collectable.value) or 0
+  -- push a dedicated slot with ref; do not merge slots
+  inv.slots[#inv.slots+1] = { entity = entity, name = name, value = value, count = 1, persistent = true }
+  inv.count = (inv.count or 0) + 1
+  inv.value = (inv.value or 0) + (value or 0)
+  inv.items[name] = (inv.items[name] or 0) + 1
+  inv.items_value[name] = (inv.items_value[name] or 0) + (value or 0)
+  return true
+end
+
 -- Remove one item from a given slot index. Returns { name, value } or nil.
 function M.remove_one(inv, index)
   if not inv or not inv.slots then return nil end
   local s = inv.slots[index]
   if not s or (s.count or 0) <= 0 then return nil end
+  if s.entity then
+    -- Persistent entity: remove entire slot and return the entity
+    local name = s.name
+    local value = s.value or 0
+    local ent = s.entity
+    inv.items[name] = math.max(0, (inv.items[name] or 0) - 1)
+    inv.items_value[name] = math.max(0, (inv.items_value[name] or 0) - value)
+    inv.count = math.max(0, (inv.count or 0) - 1)
+    inv.value = math.max(0, (inv.value or 0) - value)
+    table.remove(inv.slots, index)
+    return { name = name, value = value, entity = ent, persistent = true }
+  end
   local name = s.name
   local per = (s.count and s.count > 0) and ((s.value or 0) / s.count) or 0
   s.count = (s.count or 0) - 1

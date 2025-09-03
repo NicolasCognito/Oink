@@ -28,7 +28,13 @@ return function()
     local items = (used_query and zone.collect_query(zone, snapshot)) or (snapshot.collectables or {})
     for i = 1, #items do
       local it = items[i]
-      if it and it.pos and rect_contains(rect, it.pos.x, it.pos.y) then
+      if it and it.pos then
+        -- cooldown countdown
+        if it.just_dropped_cd and (it.just_dropped_cd or 0) > 0 then
+          it.just_dropped_cd = math.max(0, (it.just_dropped_cd or 0) - (dt or 0))
+        end
+        if (it.just_dropped_cd and it.just_dropped_cd > 0) then goto continue end
+        if not rect_contains(rect, it.pos.x, it.pos.y) then goto continue end
         local name = (it.collectable and it.collectable.name) or nil
         local val = (it.collectable and it.collectable.value) or 0
         -- Zone defines what to absorb.
@@ -41,6 +47,7 @@ return function()
           end
         end
       end
+      ::continue::
     end
   end
 
