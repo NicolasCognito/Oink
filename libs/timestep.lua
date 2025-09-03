@@ -10,7 +10,13 @@ local M = {}
 --  - scale >= 1: run floor(scale) updates, and an extra update with
 --                probability = fractional part (each with full dt)
 function M.scaled_process(entity, dt, process_fn)
-  local scale = entity and entity.time_scale or 1.0
+  local base = 1.0
+  if entity then
+    local s1 = entity.time_scale or 1.0
+    local s2 = entity._time_scale_vortex or 1.0
+    base = s1 * s2
+  end
+  local scale = base
 
   if not process_fn or dt == nil then return end
 
@@ -47,4 +53,3 @@ function M.get_steps(scale, accumulated_error)
 end
 
 return M
-

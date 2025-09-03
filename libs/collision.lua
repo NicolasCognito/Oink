@@ -36,5 +36,22 @@ function M.circles_overlap(a, ar, b, br)
   return M.dist2(ax, ay, bx, by) <= (rsum * rsum)
 end
 
-return M
+-- Axis-aligned rectangle contains point
+-- rect: { x, y, w, h }
+function M.rect_contains_point(rect, x, y)
+  if not rect then return false end
+  return x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h
+end
 
+-- Axis-aligned rectangle overlap test (AABB)
+function M.rects_overlap(a, b)
+  if not a or not b then return false end
+  return not (a.x + a.w < b.x or b.x + b.w < a.x or a.y + a.h < b.y or b.y + b.h < a.y)
+end
+
+-- Rectangle center helper
+function M.rect_center(rect)
+  return rect.x + rect.w * 0.5, rect.y + rect.h * 0.5
+end
+
+return M

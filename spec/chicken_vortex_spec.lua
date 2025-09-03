@@ -82,10 +82,9 @@ describe('chicken under time vortex', function()
     assert.is_true((c.time_scale or 1.0) == 1.0)
     -- move inside and apply
     c.pos.x, c.pos.y = 10, 10; w:add(c); w:update(0); w:update(0.016)
-    assert.are.equal(2.0, c.time_scale)
+    assert.are.equal(2.0, c._time_scale_vortex)
     -- move outside and ensure restore to original (1.0)
     c.pos.x, c.pos.y = 30, 30; w:add(c); w:update(0); w:update(0.016)
-    assert.are.equal(1.0, c.time_scale)
+    assert.are.equal(1.0, c._time_scale_vortex)
   end)
 end)
-

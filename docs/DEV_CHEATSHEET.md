@@ -35,6 +35,7 @@ This repo is set up to develop game logic with tiny-ecs, run the game in LÖVE, 
 ## Running Things
 - Run game: `love .` (from repo root).
 - Run tests: `.lua/bin/busted -c` (uses `.busted` config and prints coverage if available).
+- Run tests (gtest fallback): `.lua/bin/busted -c -v -o gtest` (use if failures are unclear or output is sparse).
 - Install a Lua rock locally: `.lua/bin/luarocks install <rock>`.
 
 ## Module Resolution
@@ -103,6 +104,8 @@ This keeps tests and LÖVE consistent.
   - Installed `luacov` already. If removed, run: `.lua/bin/luarocks install luacov`.
 - Error unpacking rocks: unzip missing
   - System `unzip` is configured in LuaRocks. If moved, edit `.lua/etc/luarocks/config-5.4.lua` `variables.UNZIP`.
+- Busted run fails silently or output is hard to read
+  - Re-run with the gtest reporter for structured output and clearer diffs: `.lua/bin/busted -c -v -o gtest [path/to/spec.lua]`.
 
 ## Handy Commands
 - Run tests verbosely: `.lua/bin/busted -c -v`

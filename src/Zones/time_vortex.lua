@@ -1,6 +1,6 @@
 local function new_time_vortex(x, y, w, h, opts)
   opts = opts or {}
-  return {
+  local z = {
     zone = true,
     type = 'time_vortex',
     active = opts.active ~= false,
@@ -11,35 +11,29 @@ local function new_time_vortex(x, y, w, h, opts)
     affect_items = opts.affect_items or false,
     affect_zones = (opts.affect_zones ~= false),
     affected = {},
+    -- optional modes: { {name='Stasis', scale=0.3}, {name='Haste', scale=2.5} }
+    modes = opts.modes,
+    mode_index = 1,
   }
+  if z.modes and z.modes[1] then
+    z.scale = z.modes[1].scale or z.scale
+    local name = z.modes[1].name or ('x' .. tostring(z.scale))
+    z.label = opts.label or ('Time: ' .. name)
+  end
+  return z
 end
 
-local function contains(rect, x, y)
-  return x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h
-end
+local Coll = require('collision')
 
 local function on_tick(zone, ctx)
   if zone.active == false then return end
 
   local agents = ctx.agents or {}
-  local affected = zone.affected or {}
-  zone.affected = affected
-
   for i = 1, #agents do
     local a = agents[i]
     if a and a.pos then
-      local inside = contains(zone.rect, a.pos.x, a.pos.y)
-      local was_inside = affected[a]
-
-      if inside and not was_inside then
-        a._original_time_scale = a.time_scale or 1.0
-        a.time_scale = zone.scale
-        affected[a] = true
-      elseif (not inside) and was_inside then
-        a.time_scale = a._original_time_scale or 1.0
-        a._original_time_scale = nil
-        affected[a] = nil
-      end
+      local inside = Coll.rect_contains_point(zone.rect, a.pos.x, a.pos.y)
+      a._time_scale_vortex = inside and zone.scale or 1.0
     end
   end
 
@@ -48,7 +42,7 @@ local function on_tick(zone, ctx)
     for i = 1, #items do
       local it = items[i]
       if it and it.pos then
-        if contains(zone.rect, it.pos.x, it.pos.y) then
+        if Coll.rect_contains_point(zone.rect, it.pos.x, it.pos.y) then
           it.time_scale = zone.scale
         else
           it.time_scale = 1.0
@@ -63,23 +57,58 @@ local function on_tick(zone, ctx)
     for i = 1, #zones do
       local z = zones[i]
       if z and z ~= zone and z.rect then
-        -- Use zone center point for inclusion test
-        local zx = z.rect.x + z.rect.w * 0.5
-        local zy = z.rect.y + z.rect.h * 0.5
-        local inside = contains(zone.rect, zx, zy)
-        local was_inside = affected[z]
-        if inside and not was_inside then
-          z._original_time_scale = z.time_scale or 1.0
-          z.time_scale = zone.scale
-          affected[z] = true
-        elseif (not inside) and was_inside then
-          z.time_scale = z._original_time_scale or 1.0
-          z._original_time_scale = nil
-          affected[z] = nil
+        local zx, zy = Coll.rect_center(z.rect)
+        local inside = Coll.rect_contains_point(zone.rect, zx, zy)
+        z._time_scale_vortex = inside and zone.scale or 1.0
+      end
+    end
+  end
+end
+
+-- Optional: support mode switching (Q/E while player overlaps handled by input system)
+local function on_mode_switch(zone, ctx, dir)
+  if not zone.modes or #zone.modes == 0 then return end
+  local n = #zone.modes
+  local idx = (zone.mode_index or 1) + (dir or 0)
+  if idx < 1 then idx = n end
+  if idx > n then idx = 1 end
+  zone.mode_index = idx
+  local mode = zone.modes[idx]
+  zone.scale = mode.scale or zone.scale
+  local name = mode.name or ('x' .. tostring(zone.scale))
+  zone.label = 'Time: ' .. name
+
+  -- Immediately apply new multiplier to entities/zones currently inside
+  if ctx then
+    local agents = ctx.agents or {}
+    for i = 1, #agents do
+      local a = agents[i]
+      if a and a.pos and Coll.rect_contains_point(zone.rect, a.pos.x, a.pos.y) then
+        a._time_scale_vortex = zone.scale
+      end
+    end
+    if zone.affect_items then
+      local items = ctx.collectables or {}
+      for i = 1, #items do
+        local it = items[i]
+        if it and it.pos and Coll.rect_contains_point(zone.rect, it.pos.x, it.pos.y) then
+          it._time_scale_vortex = zone.scale
+        end
+      end
+    end
+    if zone.affect_zones then
+      local zones = ctx.zones or {}
+      for i = 1, #zones do
+        local z = zones[i]
+        if z and z ~= zone and z.rect then
+          local zx, zy = Coll.rect_center(z.rect)
+          if Coll.rect_contains_point(zone.rect, zx, zy) then
+            z._time_scale_vortex = zone.scale
+          end
         end
       end
     end
   end
 end
 
-return { new = new_time_vortex, on_tick = on_tick }
+return { new = new_time_vortex, on_tick = on_tick, on_mode_switch = on_mode_switch }

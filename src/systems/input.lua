@@ -5,6 +5,7 @@ package.path = table.concat({
 }, ';')
 
 local tiny = require('tiny')
+local ctx = require('ctx')
 
 return function()
   local sys = tiny.system()
@@ -38,6 +39,7 @@ return function()
     if love.keyboard.isDown('q') then want = -1 end
     if love.keyboard.isDown('e') then want = 1 end
     if want ~= 0 and self._mode_cd == 0 then
+      local snapshot = ctx.get(self.world, dt)
       -- For each controllable, check overlapping zones
       local entities = self.world.entities
       for _, p in ipairs(self.entities) do
@@ -48,7 +50,7 @@ return function()
               local r = z.rect
               local px, py = p.pos.x, p.pos.y
               if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
-                z.on_mode_switch(z, want)
+                z.on_mode_switch(z, snapshot, want)
               end
             end
           end
