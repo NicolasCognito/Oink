@@ -30,7 +30,7 @@ describe('time vortex mode switching', function()
     -- Switch to next mode (Haste) while agent remains inside
     -- Build a minimal snapshot to pass to on_mode_switch
     local snapshot = { agents = { agent } }
-    v.on_mode_switch(v, snapshot, 1)
+    v.on_mode_switch(v, 1, snapshot)
     assert.are.equal(2.5, agent._time_scale_vortex)
   end)
 end)

@@ -43,7 +43,11 @@ describe('citizen composer fsm', function()
 
     -- While on vacation, work fsm should not tick further
     ticks_before = c._work_ticks or 0
-    for _=1,5 do w:update(0.1) end
+    local steps = 0
+    while c.fsm.current == 'vacation' and steps < 10 do
+      w:update(0.1)
+      steps = steps + 1
+    end
     assert.is_true((c._work_ticks or 0) == ticks_before)
 
     -- After more rest, should return to working

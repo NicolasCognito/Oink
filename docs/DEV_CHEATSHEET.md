@@ -36,6 +36,27 @@ This repo is set up to develop game logic with tiny-ecs, run the game in LÖVE, 
 - Run game: `love .` (from repo root).
 - Run tests: `.lua/bin/busted -c` (uses `.busted` config and prints coverage if available).
 - Run tests (gtest fallback): `.lua/bin/busted -c -v -o gtest` (use if failures are unclear or output is sparse).
+- Run tests via wrapper: `bash scripts/test [--out scripts/test-results.txt] [--gtest] [spec/filter]`
+  - Writes results to `scripts/test-results.txt` by default (keeps repo root clean).
+  - Pass `--gtest` to use the gtest reporter.
+  - Any additional args are forwarded to busted (e.g., `spec/move_spec.lua`).
+  - Make targets:
+    - `make test` → runs all specs, writes to `scripts/test-results.txt`.
+    - `make test-gtest` → runs with gtest reporter.
+    - `make spec FILE=spec/move_spec.lua` → single spec.
+    - Override output: `make test OUT=tmp/results.txt`.
+
+## FSM Composition (Citizen)
+- Multi-FSM support: use `libs/fsm_multi.lua` to host multiple child FSMs per entity under named keys.
+  - `ensure(entity, key, def[, opts])`: create/reset a child FSM.
+  - `step(entity, key, ctx, dt)`: tick a child FSM (update + transitions).
+  - `reset/get/in_state`: utility helpers.
+- Composer FSM: `src/FSMs/citizen.lua` combines a “work” FSM with a “vacation” FSM based on fatigue.
+  - working: runs the provided `work_def` (e.g., `FSMs.tax_collector`) and accumulates `e.fatigue`.
+  - vacation: runs `FSMs.vacationer` to reduce `e.fatigue` (rest/wander) until recovered.
+- Factory: `src/components/citizen.lua`
+  - Example: `Citizen.new({ work_def = require('FSMs.tax_collector'), fatigue_rate=1, rest_rate=4, fatigue_max=10, fatigue_min=2 })`
+  - This composes behaviors without modifying the original work FSM.
 - Install a Lua rock locally: `.lua/bin/luarocks install <rock>`.
 
 ## Module Resolution

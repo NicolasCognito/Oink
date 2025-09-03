@@ -66,7 +66,7 @@ local function on_tick(zone, ctx)
 end
 
 -- Optional: support mode switching (Q/E while player overlaps handled by input system)
-local function on_mode_switch(zone, ctx, dir)
+local function on_mode_switch(zone, dir, ctx)
   if not zone.modes or #zone.modes == 0 then return end
   local n = #zone.modes
   local idx = (zone.mode_index or 1) + (dir or 0)

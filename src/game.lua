@@ -10,12 +10,16 @@ local Player = require('components.player')
 local Draw = require('systems.draw')
 local Zombie = require('components.zombie')
 local TaxCollector = require('components.tax_collector')
+local Citizen = require('components.citizen')
+local Miner = require('components.miner')
 local BearTrap = require('Zones.bear_trap')
 local Vault = require('Zones.vault')
 local Chicken = require('components.chicken')
 local TimeDistortion = require('Zones.time_distortion')
 local TimeVortex = require('Zones.time_vortex')
 local MainHall = require('Zones.main_hall')
+local EmptyArea = require('Zones.empty_area')
+local Mine = require('Zones.mine')
 
 local M = {}
 
@@ -33,6 +37,15 @@ function M.load()
   -- Add a tax collector agent
   M.collector = TaxCollector.new({ x = 160, y = 160, speed = 120, radius = 6, label = 'Collector' })
   M.world:add(M.collector)
+  -- Add a citizen composed of Tax Collector + Vacationer behaviors
+  local TaxFSM = require('FSMs.tax_collector')
+  M.citizen = Citizen.new({
+    x = 200, y = 140, speed = 120, radius = 6, label = 'Citizen (Tax)',
+    work_def = TaxFSM,
+    collector = true, inventory_cap = 5,
+    fatigue_rate = 1.2, rest_rate = 4.0, fatigue_max = 8, fatigue_min = 2,
+  })
+  M.world:add(M.citizen)
   -- Add a bear trap zone for testing
   M.trap = BearTrap.new(220, 100, 30, 30, { label = 'Trap' })
   M.trap.on_tick = BearTrap.on_tick
@@ -62,6 +75,15 @@ function M.load()
   M.hall.on_tick = MainHall.on_tick
   M.hall.on_mode_switch = MainHall.on_mode_switch
   M.world:add(M.hall)
+  -- Add an empty area that can be transformed via M/T/V
+  M.empty = EmptyArea.new(220, 240, 80, 32, { label = 'Empty (M/T/V)' })
+  M.world:add(M.empty)
+  -- Add a mine zone and a miner
+  M.mine = Mine.new(300, 200, 60, 40, { label = 'Mine', production_interval = 0.8, production_radius = 12 })
+  M.mine.on_tick = Mine.on_tick
+  M.world:add(M.mine)
+  M.miner = Miner.new({ x = 320, y = 180, speed = 80, radius = 6, label = 'Miner' })
+  M.world:add(M.miner)
 end
 
 function M.update(dt)

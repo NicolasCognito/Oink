@@ -50,13 +50,49 @@ return function()
               local r = z.rect
               local px, py = p.pos.x, p.pos.y
               if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
-                z.on_mode_switch(z, snapshot, want)
+                -- Standardized signature: (zone, dir, ctx)
+                z.on_mode_switch(z, want, snapshot)
               end
             end
           end
         end
       end
       self._mode_cd = 0.25
+    end
+
+    -- Zone-specific controls: allow zones to react to custom keys when player overlaps
+    -- Simplify by picking the first overlapping zone with an `on_key` handler.
+    self._zone_key_cd = math.max(0, (self._zone_key_cd or 0) - (dt or 0))
+    if self._zone_key_cd == 0 then
+      local snapshot = ctx.get(self.world, dt)
+      local entities = self.world.entities
+      for _, p in ipairs(self.entities) do
+        if p.pos then
+          local active = nil
+          for i = 1, #entities do
+            local z = entities[i]
+            if z and z.zone and z.rect and z.on_key then
+              local r = z.rect
+              local px, py = p.pos.x, p.pos.y
+              if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
+                active = z; break
+              end
+            end
+          end
+          p._active_zone = active
+          if active then
+            local pressed = nil
+            if love.keyboard.isDown('m') then pressed = 'm' end
+            if love.keyboard.isDown('t') then pressed = 't' end
+            if love.keyboard.isDown('v') then pressed = 'v' end
+            if pressed then
+              active.on_key(active, p, pressed, snapshot)
+              self._zone_key_cd = 0.2
+              break -- one action per frame
+            end
+          end
+        end
+      end
     end
   end
 

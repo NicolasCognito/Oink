@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Simple test runner wrapper for busted.
+# - Writes results to a file (default: ./test-results.txt)
+# - Falls back to gtest reporter if output looks empty
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+RESULT_FILE="${TEST_OUT:-${ROOT_DIR}/scripts/test-results.txt}"
+
+USE_GTEST=0
+PASS_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out)
+      RESULT_FILE="$2"; shift 2 ;;
+    --gtest)
+      USE_GTEST=1; shift ;;
+    *)
+      PASS_ARGS+=("$1"); shift ;;
+  esac
+done
+
+CMD=(".lua/bin/busted" "-c" "-v")
+if [[ "$USE_GTEST" == "1" ]]; then
+  CMD+=("-o" "gtest")
+fi
+
+CMD+=("${PASS_ARGS[@]}")
+
+echo "Running: ${CMD[*]}" | tee "$RESULT_FILE"
+set +e
+"${CMD[@]}" 2>&1 | tee -a "$RESULT_FILE"
+STATUS=$?
+set -e
+
+# If output looks suspiciously empty, try gtest reporter as fallback
+if [[ $STATUS -ne 0 ]]; then
+  exit $STATUS
+fi
+
+BYTES=$(wc -c < "$RESULT_FILE" | tr -d '[:space:]')
+if [[ ${BYTES:-0} -lt 10 && "$USE_GTEST" == "0" ]]; then
+  echo "Output seems empty; retrying with gtest reporter..." | tee -a "$RESULT_FILE"
+  .lua/bin/busted -c -v -o gtest "${PASS_ARGS[@]}" 2>&1 | tee -a "$RESULT_FILE"
+fi
+
+exit 0

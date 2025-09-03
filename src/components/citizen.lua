@@ -1,4 +1,5 @@
 local Agent = require('components.agent')
+local Inventory = require('inventory')
 
 local function new_citizen(opts)
   opts = opts or {}
@@ -18,8 +19,16 @@ local function new_citizen(opts)
   e.rest_rate = opts.rest_rate or 4
   e.fatigue_max = opts.fatigue_max or 10
   e.fatigue_min = opts.fatigue_min or 2
+  -- optional inventory/collect behavior for work roles like tax collector
+  if opts.inventory_cap or e.collector then
+    e.inventory = e.inventory or Inventory.new(opts.inventory_cap or 5)
+  end
+  if e.collector and not e.accept_collectable then
+    e.accept_collectable = function(self, item)
+      return item and item.collectable and item.collectable.name == 'coin'
+    end
+  end
   return e
 end
 
 return { new = new_citizen }
-
