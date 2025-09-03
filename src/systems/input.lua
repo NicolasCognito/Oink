@@ -85,6 +85,7 @@ return function()
             if love.keyboard.isDown('m') then pressed = 'm' end
             if love.keyboard.isDown('t') then pressed = 't' end
             if love.keyboard.isDown('v') then pressed = 'v' end
+            if love.keyboard.isDown('p') then pressed = 'p' end
             if pressed then
               active.on_key(active, p, pressed, snapshot)
               self._zone_key_cd = 0.2
