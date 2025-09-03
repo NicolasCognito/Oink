@@ -36,6 +36,7 @@ return function()
         local ok_type = used_query and true or (accept and accept(zone, it))
         if ok_type then
           if Inventory.add(zone.inventory, name or 'item', val) then
+            it.marked_for_destruction = true
             snapshot.world:remove(it)
           end
         end

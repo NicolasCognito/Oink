@@ -68,16 +68,22 @@ function M.draw(world)
   if player and player.inventory then
     local inv = player.inventory
     local parts = {}
-    parts[#parts+1] = string.format('Items: %d', inv.count or 0)
-    for name, count in pairs(inv.items or {}) do
-      if count and count > 0 then
-        parts[#parts+1] = string.format('%s:%d', tostring(name), count)
+    local cap = inv.cap or 9
+    for i = 1, cap do
+      local s = inv.slots and inv.slots[i]
+      local label
+      if s then
+        label = string.format('%d:%s x%d', i, s.name, s.count or 1)
+      else
+        label = string.format('%d:-', i)
       end
+      if inv.active_index == i then
+        label = '['..label..']'
+      end
+      parts[#parts+1] = label
     end
-    if inv.value and inv.value > 0 then
-      parts[#parts+1] = string.format('Value:%.0f', inv.value)
-    end
-    local text = table.concat(parts, '  |  ')
+    local summary = string.format('  |  Items:%d  Value:%.0f', inv.count or 0, inv.value or 0)
+    local text = table.concat(parts, '  ') .. summary
     local h = (love.graphics.getHeight and love.graphics.getHeight()) or 300
     love.graphics.setColor(1,1,1,1)
     love.graphics.print(text, 10, h - 16)

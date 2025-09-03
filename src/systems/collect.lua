@@ -33,7 +33,7 @@ return function()
     local ii = 1
     for i = 1, #self.world.entities do
       local e = self.world.entities[i]
-      if e and e.collectable and e.pos then items[ii] = e; ii = ii + 1 end
+      if e and e.collectable and e.pos and (not e.marked_for_destruction) then items[ii] = e; ii = ii + 1 end
     end
     self._collectables = items
     -- Build membership sets for collectors with custom queries
@@ -52,6 +52,7 @@ return function()
 
   function sys:process(coin, dt)
     if not self.collectors or #self.collectors == 0 then return end
+    if coin.marked_for_destruction then return end
     local cr = coin.radius or 0
     for i = 1, #self.collectors do
       local c = self.collectors[i]
