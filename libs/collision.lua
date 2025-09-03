@@ -54,4 +54,45 @@ function M.rect_center(rect)
   return rect.x + rect.w * 0.5, rect.y + rect.h * 0.5
 end
 
+-- Point inside circle
+function M.circle_contains_point(cx, cy, r, x, y)
+  local dx, dy = (x - cx), (y - cy)
+  return (dx*dx + dy*dy) <= (r or 0)^2
+end
+
+-- Test a sub-collider (rect or circle) positioned relative to a base rect
+-- collider: { kind='rect', dx, dy, w, h } or { kind='circle', dx, dy, r }
+function M.collider_contains_point(base_rect, collider, x, y)
+  if not collider then return M.rect_contains_point(base_rect, x, y) end
+  local kind = collider.kind or 'rect'
+  local dx, dy = collider.dx or 0, collider.dy or 0
+  if kind == 'rect' then
+    local r = { x = base_rect.x + dx, y = base_rect.y + dy, w = collider.w or 0, h = collider.h or 0 }
+    return M.rect_contains_point(r, x, y)
+  elseif kind == 'circle' then
+    local cx, cy = base_rect.x + dx, base_rect.y + dy
+    return M.circle_contains_point(cx, cy, collider.r or 0, x, y)
+  else
+    return false
+  end
+end
+
+-- True if point is in base rect or any sub-collider; if opts.filter is provided,
+-- it limits checks to colliders where filter(collider) == true (base rect ignored).
+function M.zone_any_contains_point(zone, x, y, opts)
+  local filter = opts and opts.filter
+  if not filter then
+    if M.rect_contains_point(zone.rect, x, y) then return true end
+  end
+  local cols = zone.colliders
+  if not cols then return false end
+  for i = 1, #cols do
+    local c = cols[i]
+    if (not filter or filter(c)) and M.collider_contains_point(zone.rect, c, x, y) then
+      return true
+    end
+  end
+  return false
+end
+
 return M

@@ -14,12 +14,29 @@ function M.draw(world)
   for i = 1, #world.entities do
     local z = world.entities[i]
     if z and z.zone and z.rect then
-      if z.active ~= false then
-        love.graphics.setColor(0.8, 0.2, 0.2, 0.6)
-      else
-        love.graphics.setColor(0.4, 0.4, 0.4, 0.4)
-      end
+      -- Base rect
+      if z.active ~= false then love.graphics.setColor(0.8, 0.2, 0.2, 0.6) else love.graphics.setColor(0.4, 0.4, 0.4, 0.4) end
       love.graphics.rectangle('line', z.rect.x, z.rect.y, z.rect.w, z.rect.h)
+      -- Sub-colliders (if any)
+      if z.colliders and #z.colliders > 0 then
+        love.graphics.setColor(0.9, 0.9, 0.2, 0.5)
+        for ci = 1, #z.colliders do
+          local c = z.colliders[ci]
+          local kind = c.kind or 'rect'
+          if kind == 'rect' then
+            local x = z.rect.x + (c.dx or 0)
+            local y = z.rect.y + (c.dy or 0)
+            local w = c.w or 0
+            local h = c.h or 0
+            love.graphics.rectangle('line', x, y, w, h)
+          elseif kind == 'circle' then
+            local cx = z.rect.x + (c.dx or 0)
+            local cy = z.rect.y + (c.dy or 0)
+            local r = c.r or 0
+            love.graphics.circle('line', cx, cy, r)
+          end
+        end
+      end
       love.graphics.setColor(1,1,1,1)
       if z.label then
         love.graphics.print(z.label, z.rect.x + 2, z.rect.y - 14)
@@ -40,6 +57,30 @@ function M.draw(world)
       love.graphics.print(e.label .. string.format(' (x=%.0f,y=%.0f)', e.pos.x, e.pos.y), 10, 10)
       break
     end
+  end
+
+  -- Player inventory HUD at bottom
+  local player
+  for i = 1, #world.entities do
+    local e = world.entities[i]
+    if e and e.player then player = e; break end
+  end
+  if player and player.inventory then
+    local inv = player.inventory
+    local parts = {}
+    parts[#parts+1] = string.format('Items: %d', inv.count or 0)
+    for name, count in pairs(inv.items or {}) do
+      if count and count > 0 then
+        parts[#parts+1] = string.format('%s:%d', tostring(name), count)
+      end
+    end
+    if inv.value and inv.value > 0 then
+      parts[#parts+1] = string.format('Value:%.0f', inv.value)
+    end
+    local text = table.concat(parts, '  |  ')
+    local h = (love.graphics.getHeight and love.graphics.getHeight()) or 300
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print(text, 10, h - 16)
   end
 end
 
