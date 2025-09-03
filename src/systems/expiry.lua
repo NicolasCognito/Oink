@@ -10,16 +10,20 @@ local timestep = require('timestep')
 
 return function()
   local sys = tiny.processingSystem()
-  sys.filter = tiny.requireAll('collectable')
+  -- Any entity with an expiry TTL is handled here
+  sys.filter = function(self, e)
+    return e.expire_ttl ~= nil
+  end
 
   function sys:process(e, dt)
     timestep.scaled_process(e, dt, function(entity, step_dt)
-      -- per-item tick callback support
-      if entity.on_collectable_tick then
-        entity.on_collectable_tick(entity, step_dt, self.world)
+      entity.expire_age = (entity.expire_age or 0) + (step_dt or 0)
+      if entity.expire_age >= entity.expire_ttl then
+        entity.marked_for_destruction = true
       end
     end)
   end
 
   return sys
 end
+

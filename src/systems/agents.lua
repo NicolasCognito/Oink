@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local fsm = require('fsm')
 local ctx = require('ctx')
+local timestep = require('timestep')
 
 return function(opts)
   opts = opts or {}
@@ -18,8 +19,10 @@ return function(opts)
 
   function sys:process(e, dt)
     fsm.ensure(e, e.brain.fsm_def)
-    local snapshot = ctx.get(self.world, dt)
-    fsm.step(e, snapshot, dt)
+    timestep.scaled_process(e, dt, function(entity, step_dt)
+      local snapshot = ctx.get(self.world, step_dt)
+      fsm.step(entity, snapshot, step_dt)
+    end)
   end
 
   return sys

@@ -14,6 +14,7 @@ local BearTrap = require('Zones.bear_trap')
 local Vault = require('Zones.vault')
 local Chicken = require('components.chicken')
 local TimeDistortion = require('Zones.time_distortion')
+local TimeVortex = require('Zones.time_vortex')
 local MainHall = require('Zones.main_hall')
 
 local M = {}
@@ -46,6 +47,19 @@ function M.load()
   M.slow = TimeDistortion.new(260, 60, 40, 40, { label = 'Slow', factor = 0.5 })
   M.slow.on_tick = TimeDistortion.on_tick
   M.world:add(M.slow)
+  -- Add time vortex zones (separate from speed changes)
+  M.vortex_stasis = TimeVortex.new(100, 100, 50, 50, { label = 'Stasis', scale = 0.3 })
+  M.vortex_stasis.on_tick = TimeVortex.on_tick
+  M.world:add(M.vortex_stasis)
+  M.vortex_haste = TimeVortex.new(200, 100, 50, 50, { label = 'Haste', scale = 2.5 })
+  M.vortex_haste.on_tick = TimeVortex.on_tick
+  M.world:add(M.vortex_haste)
+  M.vortex_chaos = TimeVortex.new(300, 100, 50, 50, { label = 'Chaos', scale = 1.0 })
+  M.vortex_chaos.on_tick = function(zone, snapshot)
+    zone.scale = 0.1 + math.random() * 4.9
+    TimeVortex.on_tick(zone, snapshot)
+  end
+  M.world:add(M.vortex_chaos)
   -- Add a main hall zone
   M.hall = MainHall.new(20, 240, 80, 32, { label = 'Main Hall' })
   M.hall.on_tick = MainHall.on_tick
