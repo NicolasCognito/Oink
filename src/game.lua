@@ -18,6 +18,7 @@ local Chicken = require('components.chicken')
 local TimeDistortion = require('Zones.time_distortion')
 local TimeVortex = require('Zones.time_vortex')
 local MainHall = require('Zones.main_hall')
+local Teleport = require('Zones.teleport')
 local EmptyArea = require('Zones.empty_area')
 local Mine = require('Zones.mine')
 
@@ -78,6 +79,10 @@ function M.load()
   -- Add an empty area that can be transformed via M/T/V
   M.empty = EmptyArea.new(220, 240, 80, 32, { label = 'Empty (M/T/V)' })
   M.world:add(M.empty)
+  -- Add a teleport zone demo
+  M.tele = Teleport.new(360, 60, 40, 40, { label = 'Teleport → (80,220)', tx = 80, ty = 220 })
+  M.tele.on_tick = Teleport.on_tick
+  M.world:add(M.tele)
   -- Add a mine zone and a miner
   M.mine = Mine.new(300, 200, 60, 40, { label = 'Mine', production_interval = 0.8, production_radius = 12 })
   M.mine.on_tick = Mine.on_tick
