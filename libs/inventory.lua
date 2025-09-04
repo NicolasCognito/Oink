@@ -18,30 +18,59 @@ function M.isFull(inv)
   return c >= cap
 end
 
+-- Find the first free numeric index in a sparse array
+local function first_free_index(t)
+  local i = 1
+  while t and t[i] ~= nil do
+    i = i + 1
+  end
+  return i
+end
+
+-- Reserve a fixed slot index for a given name. The slot persists at index and
+-- does not compress on empty; it keeps {count=0,value=0} when "empty".
+function M.reserve_slot(inv, index, name, opts)
+  if not inv or not index then return false end
+  opts = opts or {}
+  inv.slots = inv.slots or {}
+  local s = inv.slots[index]
+  if s then
+    -- If it's an empty non-entity slot, adopt the reserved name
+    if name and (s.count or 0) == 0 and not s.entity then s.name = name end
+    s.permanent = true
+  else
+    inv.slots[index] = { name = name, value = 0, count = 0, permanent = true }
+  end
+  return true
+end
+
 local function add_slot(inv, name, value)
-  -- stack into existing slot if same name
-  for i = 1, #(inv.slots or {}) do
-    local s = inv.slots[i]
+  -- stack into any existing slot with same name (search sparse array)
+  for i, s in pairs(inv.slots or {}) do
     if s and s.name == name then
       s.count = (s.count or 1) + 1
       s.value = (s.value or 0) + (value or 0)
-      -- summaries updated by caller below
-      return
+      return true -- stacked
     end
   end
   -- otherwise, create a new slot with count=1
-  inv.slots[#inv.slots+1] = { name = name, value = value or 0, count = 1 }
-  inv.count = (inv.count or 0) + 1
-  inv.value = (inv.value or 0) + (value or 0)
-  inv.items[name] = (inv.items[name] or 0) + 1
-  inv.items_value[name] = (inv.items_value[name] or 0) + (value or 0)
+  local idx = first_free_index(inv.slots)
+  inv.slots[idx] = { name = name, value = value or 0, count = 1 }
+  return false -- created
 end
 
 -- Add an item if there is a free slot. Returns true on success.
 function M.add(inv, name, value)
   name = name or 'item'
   if M.isFull(inv) then return false end
-  add_slot(inv, name, value)
+  local stacked = add_slot(inv, name, value)
+  -- Update summaries (track total item count and value)
+  inv.count = (inv.count or 0) + 1
+  inv.value = (inv.value or 0) + (value or 0)
+  inv.items = inv.items or {}
+  inv.items[name] = (inv.items[name] or 0) + 1
+  inv.items_value = inv.items_value or {}
+  inv.items_value[name] = (inv.items_value[name] or 0) + (value or 0)
   return true
 end
 
@@ -52,7 +81,8 @@ function M.add_entity(inv, entity)
   local name = (entity.collectable and entity.collectable.name) or 'item'
   local value = (entity.collectable and entity.collectable.value) or 0
   -- push a dedicated slot with ref; do not merge slots
-  inv.slots[#inv.slots+1] = { entity = entity, name = name, value = value, count = 1, persistent = true }
+  local idx = first_free_index(inv.slots)
+  inv.slots[idx] = { entity = entity, name = name, value = value, count = 1, persistent = true }
   inv.count = (inv.count or 0) + 1
   inv.value = (inv.value or 0) + (value or 0)
   inv.items[name] = (inv.items[name] or 0) + 1
@@ -74,7 +104,8 @@ function M.remove_one(inv, index)
     inv.items_value[name] = math.max(0, (inv.items_value[name] or 0) - value)
     inv.count = math.max(0, (inv.count or 0) - 1)
     inv.value = math.max(0, (inv.value or 0) - value)
-    table.remove(inv.slots, index)
+    -- Do not compress slots; leave a hole to preserve indices
+    inv.slots[index] = nil
     return { name = name, value = value, entity = ent, persistent = true }
   end
   local name = s.name
@@ -86,7 +117,14 @@ function M.remove_one(inv, index)
   inv.count = math.max(0, (inv.count or 0) - 1)
   inv.value = math.max(0, (inv.value or 0) - per)
   if (s.count or 0) <= 0 then
-    table.remove(inv.slots, index)
+    if s.permanent then
+      -- Keep the slot as a zero-count entry
+      s.count = 0
+      s.value = 0
+    else
+      -- Do not compress slots; leave a hole to preserve indices
+      inv.slots[index] = nil
+    end
   end
   return { name = name, value = per }
 end
@@ -109,9 +147,11 @@ function M.transfer_all(from, to)
   to.value = (to.value or 0) + (from.value or 0)
   -- Move slots if destination supports them
   if to.slots then
-    for i = 1, #(from.slots or {}) do
-      local s = from.slots[i]
-      to.slots[#to.slots+1] = { name = s.name, value = s.value }
+    for _, s in pairs(from.slots or {}) do
+      if s then
+        local j = first_free_index(to.slots)
+        to.slots[j] = { name = s.name, value = s.value }
+      end
     end
   end
   -- Clear source
@@ -164,17 +204,16 @@ function M.transfer(from, to, opts)
         -- Remove slots from source; add to destination if it supports slots
         if from.slots then
           local removed = 0
-          local i = 1
-          while i <= #from.slots and removed < move do
-            local s = from.slots[i]
+          for i, s in pairs(from.slots) do
+            if removed >= move then break end
             if s and s.name == name then
               if to.slots then
-                to.slots[#to.slots+1] = { name = name, value = per }
+                local j = first_free_index(to.slots)
+                to.slots[j] = { name = name, value = per }
               end
-              table.remove(from.slots, i)
+              -- Do not compress source slots
+              from.slots[i] = nil
               removed = removed + 1
-            else
-              i = i + 1
             end
           end
         end

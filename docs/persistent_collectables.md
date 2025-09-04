@@ -32,7 +32,7 @@ This note explains a second class of collectables that are not meant to be destr
 3) Drop
 - If the active slot holds a persistent ref:
   - Place the same entity back into the world at the player’s position; mark it active/drawable again (or `world:add(e)`).
-  - Clear the slot.
+  - Clear the slot without compressing: set `slots[i] = nil` to leave a hole and preserve indices.
 - If the active slot holds a stackable record:
   - Behaves as today: remove one count and spawn a new entity from `{ name, value }`.
 
@@ -66,9 +66,9 @@ This note explains a second class of collectables that are not meant to be destr
 
 ## Implementation Notes (when we wire it in)
 
-- Inventory data structure: allow a slot to carry either a stack record or an entity ref.
+- Inventory data structure: allow a slot to carry either a stack record or an entity ref; treat `slots` as a sparse array (holes allowed).
 - Deactivate semantics: simplest is to `world:remove(e)` and rely on the slot holding the reference until re-adding it.
 - Prevent re-collection races: when re-adding, consider a tiny invulnerability/timestamp to avoid immediate re-pickup on the same frame (or add on the next tick).
-- HUD: render persistent slot as `name` without `xN` suffix.
+- HUD: render persistent slot as `name` without `xN` suffix; empty slots remain visible as holes to avoid shifting indices.
 
 This design keeps current behavior for consumables and adds a clean, non-destructive flow for unique items that should return to the world exactly as they were before pickup.

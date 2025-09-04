@@ -14,6 +14,8 @@ local function new_player(opts)
   e.collector = true
   e.player = true
   e.inventory = Inventory.new(opts.inventory_cap or 20)
+  -- Reserve slot 1 for coins (permanent; drops to count=0 when emptied)
+  Inventory.reserve_slot(e.inventory, 1, 'coin')
   -- Player collects every collectable by default; override if needed
   e.accept_collectable = function(self, item)
     return item ~= nil and item.collectable ~= nil

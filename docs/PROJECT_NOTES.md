@@ -45,6 +45,24 @@ This file tracks project-specific decisions for the current playable demo. Keep 
    - Mode switching via input `Q`/`E` while overlapping the zone.
 - Zone collectors: tag zone with `collector=true`, give it `inventory`, and `zone_collect` will absorb coins or filters via `zone.accept_collectable`.
 
+## Inventory Semantics
+- Slots are sparse: `inventory.slots` is treated as a sparse array of fixed positions `1..cap`.
+  - Removing an item/stack clears the slot (`slots[i] = nil`) but does not compress or shift indices.
+  - HUD shows empty slots as `i:-`; indices remain stable for player muscle memory.
+- Stacking: adding an item stacks onto any existing slot with the same `name` (search via `pairs(slots)`), even past holes.
+- Insertion: when creating a new slot, the earliest free index is used (first hole), preserving other indices.
+- Transfer: moves summary counts/values and then moves up to `max_count` slots by name; iteration is sparse-aware and removal uses `slots[i] = nil` (no `table.remove`).
+- Count vs cap:
+  - `inv.cap`: total slot capacity.
+  - `inv.count`: number of occupied slots/items; not equal to `#inv.slots` when holes exist.
+  - `M.isFull(inv)`: compares `count >= cap`.
+
+### Permanent (Reserved) Slots
+- You can reserve a slot index for a specific item name so it never becomes truly empty:
+  - API: `Inventory.reserve_slot(inv, index, name)`.
+  - Behavior: when the slot is emptied, it stays at that index with `{count=0, value=0, name}` and does not accept other names.
+  - Player: slot `1` is reserved for `coin` by default.
+
 ## Testing Notes
 - tiny-ecs queues adds/removes; after crossing a spawn interval, tick `world:update(0)` to apply changes in specs.
 - Spawner accepts `get_size` to avoid stubbing `love.graphics.getWidth/Height` in tests.

@@ -37,10 +37,10 @@ end
 local function on_tick(zone, ctx)
   if zone.active == false then return end
   local rect = zone.rect
-  local ia = zone.zone_state.inside_agents or {}
-  local ii = zone.zone_state.inside_items or {}
-  zone.zone_state.inside_agents = ia
-  zone.zone_state.inside_items = ii
+  -- Presence mode: teleport entities whenever they are inside the trigger region
+  -- NOTE: This runs without saferails (no cooldowns, no nudges). If destination
+  --       lands inside a teleporter (this or another), entities may teleport
+  --       repeatedly or ping-pong. Consider adding a cooldown/ignore window later.
 
   -- Agents
   local agents = ctx.agents or {}
@@ -48,15 +48,8 @@ local function on_tick(zone, ctx)
     local a = agents[i]
     if a and a.pos then
       local function is_left(c) return c and c.id == 'left' end
-      local now = Coll.zone_any_contains_point(zone, a.pos.x, a.pos.y, { filter = is_left })
-      local was = ia[a] or false
-      if now and not was then
-        if zone.enabled ~= false then
-          a.pos.x, a.pos.y = zone.tx or 0, zone.ty or 0
-        end
-        ia[a] = true
-      elseif (not now) and was then
-        ia[a] = false
+      if zone.enabled ~= false and Coll.zone_any_contains_point(zone, a.pos.x, a.pos.y, { filter = is_left }) then
+        a.pos.x, a.pos.y = zone.tx or 0, zone.ty or 0
       end
     end
   end
@@ -67,15 +60,8 @@ local function on_tick(zone, ctx)
     local it = items[i]
     if it and it.pos then
       local function is_left(c) return c and c.id == 'left' end
-      local now = Coll.zone_any_contains_point(zone, it.pos.x, it.pos.y, { filter = is_left })
-      local was = ii[it] or false
-      if now and not was then
-        if zone.enabled ~= false then
-          it.pos.x, it.pos.y = zone.tx or 0, zone.ty or 0
-        end
-        ii[it] = true
-      elseif (not now) and was then
-        ii[it] = false
+      if zone.enabled ~= false and Coll.zone_any_contains_point(zone, it.pos.x, it.pos.y, { filter = is_left }) then
+        it.pos.x, it.pos.y = zone.tx or 0, zone.ty or 0
       end
     end
   end
