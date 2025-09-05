@@ -13,16 +13,16 @@ local function new_player(opts)
   e.controllable = true
   e.collector = true
   e.player = true
+  e.driver = true
   e.inventory = Inventory.new(opts.inventory_cap or 20)
-  -- Reserve slot 1 for coins (permanent; drops to count=0 when emptied)
+  -- Reserved slot 1 for coins: standardized behavior, accept only coins; show Coin: x0 when empty
   Inventory.reserve_slot(e.inventory, 1, 'coin')
-  -- Reserve slot 2 for agents (e.g., passengers); accepts only entity items with agent=true
-  Inventory.reserve_slot(e.inventory, 2, 'passenger', {
-    accept = function(slot, item)
-      -- item may be an entity or a record descriptor {name,value}
-      if item and item.agent then return true end
-      return false
-    end
+  -- Custom slot 2 for passengers: not reserved, but persistent UI with default label; only accepts agents
+  Inventory.define_slot(e.inventory, 2, {
+    default_name = 'passenger',
+    accept = function(_, item)
+      return item and item.agent == true
+    end,
   })
   -- Player collects every collectable by default; override if needed
   e.accept_collectable = function(self, item)

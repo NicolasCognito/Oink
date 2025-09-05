@@ -10,8 +10,9 @@ local Inventory = require('inventory')
 describe('reserved entity slot preserves label', function()
   it('keeps reserved name before, during, and after holding an entity', function()
     local inv = Inventory.new(5)
-    -- Reserve slot 2 for passengers with accept=agent
-    Inventory.reserve_slot(inv, 2, 'passenger', {
+    -- Define slot 2 for passengers with accept=agent (custom, not reserved)
+    Inventory.define_slot(inv, 2, {
+      default_name = 'passenger',
       accept = function(_, item) return item and item.agent == true end
     })
     -- Initially: label should be 'passenger', count/value zero
@@ -23,11 +24,11 @@ describe('reserved entity slot preserves label', function()
     -- Add a persistent agent entity (e.g., zombie)
     local zombie = { agent = true, collectable = { name='zombie', value=5, persistent=true } }
     assert.is_true(Inventory.add_entity(inv, zombie))
-    -- While holding the entity, name should remain the reserved label
-    assert.are.equal('passenger', inv.slots[2].name)
+    -- While holding the entity, slot name should reflect current item
+    assert.are.equal('zombie', inv.slots[2].name)
     assert.is_not_nil(inv.slots[2].entity)
 
-    -- Remove it and ensure label and slot persist with zero count/value
+    -- Remove it and ensure label resets to default and slot persists with zero count/value
     local removed = Inventory.remove_one(inv, 2)
     assert.is_not_nil(removed)
     assert.is_true(inv.slots[2] ~= nil)
@@ -37,4 +38,3 @@ describe('reserved entity slot preserves label', function()
     assert.are.equal(0, inv.slots[2].value or 0)
   end)
 end)
-

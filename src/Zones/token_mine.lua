@@ -24,7 +24,13 @@ local function new_token_mine(x, y, w, h, opts)
   Inventory.reserve_slot(z.inventory, 1, 'work')
   Inventory.reserve_slot(z.inventory, 2, 'ruby')
 
-  -- Only absorb work tokens
+  -- Only absorb work tokens: use policy-built collect_query (keeps accept_collectable for back-compat)
+  local match = require('entity_match')
+  z.collect_query = match.build_query({
+    whitelist = function(_, it)
+      return it and it.collectable and it.collectable.name == 'work'
+    end
+  })
   z.accept_collectable = function(self, item)
     return item and item.collectable and item.collectable.name == 'work'
   end
@@ -81,4 +87,3 @@ local function on_tick(zone, ctx, dt)
 end
 
 return { new = new_token_mine, on_tick = on_tick }
-

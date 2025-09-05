@@ -7,11 +7,11 @@ package.path = table.concat({
 
 local Inventory = require('inventory')
 
-describe('reserved slot with entity persists accept after remove', function()
+describe('custom slot with entity persists accept after remove', function()
   it('keeps slot table and accept after dropping persistent entity', function()
     local inv = Inventory.new(5)
     local function accept_agent(_, item) return item and item.agent == true end
-    Inventory.reserve_slot(inv, 2, 'passenger', { accept = accept_agent })
+    Inventory.define_slot(inv, 2, { default_name = 'passenger', accept = accept_agent })
     local passenger = { agent = true, collectable = { name='agent', value=0, persistent=true } }
     assert.is_true(Inventory.add_entity(inv, passenger))
     -- Now remove from slot 2
@@ -24,4 +24,3 @@ describe('reserved slot with entity persists accept after remove', function()
     assert.are.equal(0, inv.slots[2].value or 0)
   end)
 end)
-

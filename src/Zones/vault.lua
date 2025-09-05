@@ -1,4 +1,5 @@
 local Inventory = require('inventory')
+local match = require('entity_match')
 
 local function new_vault(x, y, w, h, opts)
   opts = opts or {}
@@ -12,7 +13,13 @@ local function new_vault(x, y, w, h, opts)
     drawable = true,
     collector = true,
     inventory = Inventory.new(math.huge),
-    -- Absorb policy: coins only by default; override via accept_collectable or collect_query
+    -- Absorb policy: coins only by default; prefer policy-built collect_query
+    collect_query = match.build_query({
+      whitelist = function(_, it)
+        return it and it.collectable and it.collectable.name == 'coin'
+      end
+    }),
+    -- Back-compat path for systems that consult accept_collectable
     accept_collectable = function(self, item)
       return item and item.collectable and item.collectable.name == 'coin'
     end,
@@ -23,20 +30,5 @@ local function contains(rect, x, y)
   return x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h
 end
 
-local function on_tick(zone, ctx)
-  if zone.active == false then return end
-  local items = ctx.collectables or {}
-  for i = 1, #items do
-    local it = items[i]
-    if it and it.pos and it.collectable and it.collectable.name == 'coin' then
-      if contains(zone.rect, it.pos.x, it.pos.y) then
-        local ok = Inventory.add(zone.inventory, it.collectable.name, it.collectable.value or 0)
-        if ok then
-          ctx.world:remove(it)
-        end
-      end
-    end
-  end
-end
-
-return { new = new_vault, on_tick = on_tick }
+-- ZoneCollect system handles collection using collect_query; keep helper for rectangle checks
+return { new = new_vault, on_tick = nil }

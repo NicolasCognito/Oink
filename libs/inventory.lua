@@ -38,11 +38,32 @@ function M.reserve_slot(inv, index, name, opts)
     -- If it's an empty non-entity slot, adopt the reserved name
     if name and (s.count or 0) == 0 and not s.entity then s.name = name end
     s.permanent = true
+    s.reserved = true
+    s.default_name = name or s.default_name
     if opts.accept then s.accept = opts.accept end
     if opts.stack then s.stack = opts.stack end
   else
-    inv.slots[index] = { name = name, value = 0, count = 0, permanent = true, accept = opts.accept, stack = opts.stack }
+    inv.slots[index] = { name = name, default_name = name, value = 0, count = 0, permanent = true, reserved = true, accept = opts.accept, stack = opts.stack }
   end
+  return true
+end
+
+-- Define a custom slot at a fixed index with optional behavior but without reserved-name semantics.
+-- opts: { default_name, accept, stack }
+function M.define_slot(inv, index, opts)
+  if not inv or not index then return false end
+  opts = opts or {}
+  inv.slots = inv.slots or {}
+  local s = inv.slots[index]
+  if not s then s = {}; inv.slots[index] = s end
+  s.permanent = true
+  s.reserved = false
+  if opts.default_name then s.default_name = opts.default_name end
+  if s.name == nil then s.name = s.default_name end
+  if opts.accept then s.accept = opts.accept end
+  if opts.stack then s.stack = opts.stack end
+  s.value = s.value or 0
+  s.count = s.count or 0
   return true
 end
 
@@ -67,10 +88,11 @@ local function add_slot(inv, name, value)
     if s and s.permanent and (s.count or 0) == 0 and not s.entity then
       local desc = { name = name, value = value }
       local accepts = slot_accepts(s, desc)
-      -- If no explicit accept is provided, enforce reserved-name match for reserved slots
+      -- If no explicit accept is provided, enforce reserved-name match only for reserved slots
       local name_ok = (s.name == nil) or (s.name == name)
-      if accepts and (s.accept and true or name_ok) then
-        if s.name == nil then s.name = name end
+      if (s.accept and accepts) or (s.reserved and accepts and name_ok) then
+        -- Occupy reserved slot; show current item type as name while occupied
+        s.name = name
         s.value = value or 0
         s.count = 1
         return false -- created in reserved slot
@@ -111,14 +133,13 @@ function M.add_entity(inv, entity)
       -- If slot has an explicit accept, use it; otherwise enforce reserved-name match
       local accepts = slot_accepts(s, entity)
       local name_ok = (s.name == nil) or (s.name == name)
-      if accepts and (s.accept and true or name_ok) then
-        -- Preserve the reserved slot table and its label; just populate entity content
+      if (s.accept and accepts) or (s.reserved and accepts and name_ok) then
+        -- Occupy reserved slot; show current entity name while occupied
         s.entity = entity
         s.count = 1
         s.value = value
         s.persistent = true
-        -- Keep reserved name if present; otherwise adopt entity name
-        if s.name == nil then s.name = name end
+        s.name = name
         inv.count = (inv.count or 0) + 1
         inv.value = (inv.value or 0) + (value or 0)
         inv.items[name] = (inv.items[name] or 0) + 1
@@ -157,6 +178,8 @@ function M.remove_one(inv, index)
       s.persistent = nil
       s.count = 0
       s.value = 0
+      -- Reset display name back to default_name if provided
+      if s.default_name ~= nil then s.name = s.default_name end
       -- Keep s.name, s.accept, s.stack, s.permanent
     else
       -- Do not compress slots; leave a hole to preserve indices
@@ -177,6 +200,7 @@ function M.remove_one(inv, index)
       -- Keep the slot as a zero-count entry
       s.count = 0
       s.value = 0
+      if s.default_name ~= nil then s.name = s.default_name end
     else
       -- Do not compress slots; leave a hole to preserve indices
       inv.slots[index] = nil

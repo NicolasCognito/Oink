@@ -24,6 +24,7 @@ local EmptyArea = require('Zones.empty_area')
 local Mine = require('Zones.mine')
 local Home = require('Zones.home')
 local TokenMine = require('Zones.token_mine')
+local Car = require('components.car')
 
 local M = {}
 
@@ -113,6 +114,9 @@ function M.load()
     fatigue_rate = 0.8, rest_rate = 3.0, fatigue_max = 8, fatigue_min = 2,
   })
   M.world:add(M.token_citizen)
+  -- Add a car at the right-bottom area for driving demo
+  M.car = Car.new({ x = 460, y = 260, radius = 10, label = 'Car' })
+  M.world:add(M.car)
 end
 
 function M.update(dt)

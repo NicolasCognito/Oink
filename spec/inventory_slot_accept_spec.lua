@@ -11,10 +11,9 @@ describe('inventory slot accept', function()
   it('respects reserved slot accept for agents', function()
     local inv = Inventory.new(5)
     Inventory.reserve_slot(inv, 1, 'coin')
-    Inventory.reserve_slot(inv, 2, 'passenger', {
-      accept = function(slot, item)
-        return item and item.agent == true
-      end
+    Inventory.define_slot(inv, 2, {
+      default_name = 'passenger',
+      accept = function(_, item) return item and item.agent == true end,
     })
     -- Add a coin record; should not go into slot 2
     assert.is_true(Inventory.add(inv, 'coin', 1))
@@ -26,4 +25,3 @@ describe('inventory slot accept', function()
     assert.is_true(inv.slots[2] and inv.slots[2].entity == agent)
   end)
 end)
-

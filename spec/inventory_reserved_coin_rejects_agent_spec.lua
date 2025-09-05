@@ -12,8 +12,9 @@ describe('reserved coin slot rejects agent entity without accept', function()
     local inv = Inventory.new(5)
     -- Slot 1 reserved for coins; no explicit accept
     Inventory.reserve_slot(inv, 1, 'coin')
-    -- Slot 2 reserved for passengers; explicit accept for agent entities
-    Inventory.reserve_slot(inv, 2, 'passenger', {
+    -- Slot 2 custom for passengers (persistent UI, not reserved)
+    Inventory.define_slot(inv, 2, {
+      default_name = 'passenger',
       accept = function(_, item) return item and item.agent == true end
     })
 
@@ -33,4 +34,3 @@ describe('reserved coin slot rejects agent entity without accept', function()
     assert.are.equal(agent, inv.slots[2].entity)
   end)
 end)
-
