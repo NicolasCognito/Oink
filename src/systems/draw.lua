@@ -1,4 +1,5 @@
 local M = {}
+local avatar = require('avatar')
 
 local function default_draw_entity(e)
   if not e.pos or not e.drawable then return end
@@ -59,14 +60,16 @@ function M.draw(world)
     end
   end
 
-  -- Player inventory HUD at bottom
-  local player
-  for i = 1, #world.entities do
-    local e = world.entities[i]
-    if e and e.player then player = e; break end
+  -- Active controller inventory HUD at bottom (fallback to first player)
+  local holder = avatar.get(world)
+  if not holder then
+    for i = 1, #world.entities do
+      local e = world.entities[i]
+      if e and e.player then holder = e; break end
+    end
   end
-  if player and player.inventory then
-    local inv = player.inventory
+  if holder and holder.inventory then
+    local inv = holder.inventory
     local parts = {}
     local cap = inv.cap or 9
     for i = 1, cap do
@@ -83,7 +86,8 @@ function M.draw(world)
       parts[#parts+1] = label
     end
     local summary = string.format('  |  Items:%d  Value:%.0f', inv.count or 0, inv.value or 0)
-    local text = table.concat(parts, '  ') .. summary
+    local who = holder.label or 'Entity'
+    local text = who .. ' inv: ' .. table.concat(parts, '  ') .. summary
     local h = (love.graphics.getHeight and love.graphics.getHeight()) or 300
     love.graphics.setColor(1,1,1,1)
     love.graphics.print(text, 10, h - 16)

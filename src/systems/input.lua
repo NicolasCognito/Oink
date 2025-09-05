@@ -6,11 +6,13 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local ctx = require('ctx')
+local avatar = require('avatar')
 
 return function()
   local sys = tiny.system()
   sys.filter = tiny.requireAll('vel', 'controllable')
   sys._mode_cd = 0
+  sys._switch_cd = 0
 
   function sys:update(dt)
     local up    = love.keyboard.isDown('w') or love.keyboard.isDown('up')
@@ -22,15 +24,28 @@ return function()
     local ay = (down and 1 or 0) - (up and 1 or 0)
 
     local mag = math.sqrt(ax*ax + ay*ay)
-    for _, e in ipairs(self.entities) do
-      local speed = e.speed or 120
+    -- Route movement only to the active avatar
+    local active = avatar.get(self.world)
+    if not active then
+      local list = avatar.candidates(self.world)
+      if #list > 0 then active = avatar.set(self.world, list[1]) end
+    end
+    if active then
+      local speed = active.speed or 120
       if mag > 0 then
-        e.vel.x = (ax / mag) * speed
-        e.vel.y = (ay / mag) * speed
+        active.vel.x = (ax / mag) * speed
+        active.vel.y = (ay / mag) * speed
       else
-        e.vel.x = 0
-        e.vel.y = 0
+        active.vel.x = 0
+        active.vel.y = 0
       end
+    end
+
+    -- Tab switching between controllable avatars
+    self._switch_cd = math.max(0, (self._switch_cd or 0) - (dt or 0))
+    if self._switch_cd == 0 and love.keyboard.isDown('tab') then
+      avatar.next(self.world, 1)
+      self._switch_cd = 0.25
     end
 
     -- Mode switching for zones: press Q/E while overlapping
@@ -40,19 +55,16 @@ return function()
     if love.keyboard.isDown('e') then want = 1 end
     if want ~= 0 and self._mode_cd == 0 then
       local snapshot = ctx.get(self.world, dt)
-      -- For each controllable, check overlapping zones
-      local entities = self.world.entities
-      for _, p in ipairs(self.entities) do
-        if p.pos then
-          for i = 1, #entities do
-            local z = entities[i]
-            if z and z.zone and z.rect and z.on_mode_switch then
-              local r = z.rect
-              local px, py = p.pos.x, p.pos.y
-              if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
-                -- Standardized signature: (zone, dir, ctx)
-                z.on_mode_switch(z, want, snapshot)
-              end
+      local p = avatar.get(self.world)
+      if p and p.pos then
+        local entities = self.world.entities
+        for i = 1, #entities do
+          local z = entities[i]
+          if z and z.zone and z.rect and z.on_mode_switch then
+            local r = z.rect
+            local px, py = p.pos.x, p.pos.y
+            if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
+              z.on_mode_switch(z, want, snapshot)
             end
           end
         end
@@ -66,31 +78,29 @@ return function()
     if self._zone_key_cd == 0 then
       local snapshot = ctx.get(self.world, dt)
       local entities = self.world.entities
-      for _, p in ipairs(self.entities) do
-        if p.pos then
-          local active = nil
-          for i = 1, #entities do
-            local z = entities[i]
-            if z and z.zone and z.rect and z.on_key then
-              local r = z.rect
-              local px, py = p.pos.x, p.pos.y
-              if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
-                active = z; break
-              end
+      local p = avatar.get(self.world)
+      if p and p.pos then
+        local active = nil
+        for i = 1, #entities do
+          local z = entities[i]
+          if z and z.zone and z.rect and z.on_key then
+            local r = z.rect
+            local px, py = p.pos.x, p.pos.y
+            if px >= r.x and px <= r.x + r.w and py >= r.y and py <= r.y + r.h then
+              active = z; break
             end
           end
-          p._active_zone = active
-          if active then
-            local pressed = nil
-            if love.keyboard.isDown('m') then pressed = 'm' end
-            if love.keyboard.isDown('t') then pressed = 't' end
-            if love.keyboard.isDown('v') then pressed = 'v' end
-            if love.keyboard.isDown('p') then pressed = 'p' end
-            if pressed then
-              active.on_key(active, p, pressed, snapshot)
-              self._zone_key_cd = 0.2
-              break -- one action per frame
-            end
+        end
+        p._active_zone = active
+        if active then
+          local pressed = nil
+          if love.keyboard.isDown('m') then pressed = 'm' end
+          if love.keyboard.isDown('t') then pressed = 't' end
+          if love.keyboard.isDown('v') then pressed = 'v' end
+          if love.keyboard.isDown('p') then pressed = 'p' end
+          if pressed then
+            active.on_key(active, p, pressed, snapshot)
+            self._zone_key_cd = 0.2
           end
         end
       end

@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Inventory = require('inventory')
 local spawn = require('spawn')
+local avatar = require('avatar')
 
 local function spawn_item(name, value, x, y)
   name = name or 'item'
@@ -50,14 +51,16 @@ return function()
 
   function sys:update(dt)
     self._key_cd = math.max(0, (self._key_cd or 0) - (dt or 0))
-    -- Find player with inventory
-    local player
-    for i = 1, #self.world.entities do
-      local e = self.world.entities[i]
-      if e and e.player and e.inventory then player = e; break end
+    -- Target the actively controlled avatar (fallback to first player with inventory)
+    local holder = avatar.get(self.world)
+    if (not holder) then
+      for i = 1, #self.world.entities do
+        local e = self.world.entities[i]
+        if e and e.player and e.inventory then holder = e; break end
+      end
     end
-    if not player then return end
-    local inv = player.inventory
+    if not holder or not holder.inventory then return end
+    local inv = holder.inventory
 
     -- Handle slot selection 1..9
     for i = 1, math.min(inv.cap or 9, 9) do
@@ -73,15 +76,15 @@ return function()
       local idx = inv.active_index
       if idx and inv.slots and inv.slots[idx] then
         local removed = Inventory.remove_one(inv, idx)
-        if removed and player.pos then
+        if removed and holder.pos then
           if removed.entity then
             local e = removed.entity
             e.pos = e.pos or { x = 0, y = 0 }
-            e.pos.x, e.pos.y = player.pos.x, player.pos.y
+            e.pos.x, e.pos.y = holder.pos.x, holder.pos.y
             e.just_dropped_cd = 1.0
             spawn.request(e)
           else
-            local item = spawn_item(removed.name, removed.value, player.pos.x, player.pos.y)
+            local item = spawn_item(removed.name, removed.value, holder.pos.x, holder.pos.y)
             item.just_dropped_cd = 1.0
             spawn.request(item)
           end

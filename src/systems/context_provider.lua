@@ -7,6 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local ctx = require('ctx')
+local avatar_ok, avatar = pcall(require, 'avatar')
 
 return function()
   local sys = tiny.system()
@@ -26,9 +27,17 @@ return function()
         if e.collectable then collectables[ci] = e; ci = ci + 1 end
         if e.zone then zones[zi] = e; zi = zi + 1 end
         if e.coin and e.pos then coins[ko] = e; ko = ko + 1 end
-        if e.player then snapshot.player = e end
+        if e.player then
+          snapshot.players = snapshot.players or {}
+          snapshot.players[#snapshot.players+1] = e
+        end
       end
     end
+    if avatar_ok and avatar and avatar.get then
+      snapshot.active_avatar = avatar.get(world)
+    end
+    -- Backward-compat alias (avoid using in AI):
+    snapshot.player = snapshot.active_avatar or (snapshot.players and snapshot.players[1])
     snapshot.agents = agents
     snapshot.collectables = collectables
     snapshot.zones = zones
@@ -59,4 +68,3 @@ return function()
 
   return sys
 end
-

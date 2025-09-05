@@ -21,9 +21,18 @@ function M.get(world, dt)
       if e.collectable then collectables[ci] = e; ci = ci + 1 end
       if e.zone then zones[zi] = e; zi = zi + 1 end
       if e.coin and e.pos then coins[ko] = e; ko = ko + 1 end
-      if e.player then snapshot.player = e end
+      if e.player then
+        snapshot.players = snapshot.players or {}
+        snapshot.players[#snapshot.players+1] = e
+      end
     end
   end
+  -- Include active avatar if available
+  local ok, avatar = pcall(require, 'avatar')
+  if ok and avatar and avatar.get then
+    snapshot.active_avatar = avatar.get(world)
+  end
+  snapshot.player = snapshot.active_avatar or (snapshot.players and snapshot.players[1])
   snapshot.agents = agents
   snapshot.collectables = collectables
   snapshot.zones = zones
@@ -51,4 +60,3 @@ function M.get(world, dt)
 end
 
 return M
-

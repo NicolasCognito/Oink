@@ -29,8 +29,13 @@ local M = {}
 
 function M.load()
   M.world = World.create()
-  M.player = Player.new({ x = 60, y = 60, speed = 160, radius = 6, label = 'Player' })
+  -- Two-player demo: Player1 is active by default, Player2 is eligible
+  M.player = Player.new({ x = 60, y = 60, speed = 160, radius = 6, label = 'Player 1' })
+  M.player.controlled = true
   M.world:add(M.player)
+  M.player2 = Player.new({ x = 120, y = 60, speed = 160, radius = 6, label = 'Player 2' })
+  M.player2.controlled = false
+  M.world:add(M.player2)
   -- Add a zombie to demonstrate FSM behavior
   M.zombie = Zombie.new({ x = 260, y = 120, speed = 60, radius = 6, label = 'Zombie' })
   M.world:add(M.zombie)
