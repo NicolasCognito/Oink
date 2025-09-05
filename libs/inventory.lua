@@ -38,25 +38,49 @@ function M.reserve_slot(inv, index, name, opts)
     -- If it's an empty non-entity slot, adopt the reserved name
     if name and (s.count or 0) == 0 and not s.entity then s.name = name end
     s.permanent = true
+    if opts.accept then s.accept = opts.accept end
+    if opts.stack then s.stack = opts.stack end
   else
-    inv.slots[index] = { name = name, value = 0, count = 0, permanent = true }
+    inv.slots[index] = { name = name, value = 0, count = 0, permanent = true, accept = opts.accept, stack = opts.stack }
   end
   return true
 end
 
+local function slot_accepts(s, item)
+  if not s or not s.accept then return true end
+  -- s.accept(slot, item) should return boolean
+  return s.accept(s, item) == true
+end
+
 local function add_slot(inv, name, value)
-  -- stack into any existing slot with same name (search sparse array)
-  for i, s in pairs(inv.slots or {}) do
-    if s and s.name == name then
+  inv.slots = inv.slots or {}
+  -- Prefer stacking into an existing compatible slot with same name (iterate existing slots only)
+  for i, s in pairs(inv.slots) do
+    if s and not s.entity and s.name == name and slot_accepts(s, { name = name, value = value }) then
       s.count = (s.count or 1) + 1
       s.value = (s.value or 0) + (value or 0)
       return true -- stacked
     end
   end
-  -- otherwise, create a new slot with count=1
+  -- Otherwise, place into the first empty acceptable reserved slot
+  for i, s in pairs(inv.slots) do
+    if s and s.permanent and (s.count or 0) == 0 and not s.entity then
+      local desc = { name = name, value = value }
+      local accepts = slot_accepts(s, desc)
+      -- If no explicit accept is provided, enforce reserved-name match for reserved slots
+      local name_ok = (s.name == nil) or (s.name == name)
+      if accepts and (s.accept and true or name_ok) then
+        if s.name == nil then s.name = name end
+        s.value = value or 0
+        s.count = 1
+        return false -- created in reserved slot
+      end
+    end
+  end
+  -- Otherwise, create a new slot at the first free index
   local idx = first_free_index(inv.slots)
   inv.slots[idx] = { name = name, value = value or 0, count = 1 }
-  return false -- created
+  return false
 end
 
 -- Add an item if there is a free slot. Returns true on success.
@@ -80,7 +104,30 @@ function M.add_entity(inv, entity)
   if M.isFull(inv) then return false end
   local name = (entity.collectable and entity.collectable.name) or 'item'
   local value = (entity.collectable and entity.collectable.value) or 0
-  -- push a dedicated slot with ref; do not merge slots
+  -- Prefer a reserved permanent slot that accepts this entity
+  inv.slots = inv.slots or {}
+  for i, s in pairs(inv.slots) do
+    if s and s.permanent and (s.count or 0) == 0 and not s.entity then
+      -- If slot has an explicit accept, use it; otherwise enforce reserved-name match
+      local accepts = slot_accepts(s, entity)
+      local name_ok = (s.name == nil) or (s.name == name)
+      if accepts and (s.accept and true or name_ok) then
+        -- Preserve the reserved slot table and its label; just populate entity content
+        s.entity = entity
+        s.count = 1
+        s.value = value
+        s.persistent = true
+        -- Keep reserved name if present; otherwise adopt entity name
+        if s.name == nil then s.name = name end
+        inv.count = (inv.count or 0) + 1
+        inv.value = (inv.value or 0) + (value or 0)
+        inv.items[name] = (inv.items[name] or 0) + 1
+        inv.items_value[name] = (inv.items_value[name] or 0) + (value or 0)
+        return true
+      end
+    end
+  end
+  -- Otherwise, push a dedicated slot with ref; do not merge slots
   local idx = first_free_index(inv.slots)
   inv.slots[idx] = { entity = entity, name = name, value = value, count = 1, persistent = true }
   inv.count = (inv.count or 0) + 1
@@ -104,8 +151,17 @@ function M.remove_one(inv, index)
     inv.items_value[name] = math.max(0, (inv.items_value[name] or 0) - value)
     inv.count = math.max(0, (inv.count or 0) - 1)
     inv.value = math.max(0, (inv.value or 0) - value)
-    -- Do not compress slots; leave a hole to preserve indices
-    inv.slots[index] = nil
+    if s.permanent then
+      -- Keep the reserved slot; clear entity and reset counters
+      s.entity = nil
+      s.persistent = nil
+      s.count = 0
+      s.value = 0
+      -- Keep s.name, s.accept, s.stack, s.permanent
+    else
+      -- Do not compress slots; leave a hole to preserve indices
+      inv.slots[index] = nil
+    end
     return { name = name, value = value, entity = ent, persistent = true }
   end
   local name = s.name
