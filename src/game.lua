@@ -12,6 +12,7 @@ local Zombie = require('components.zombie')
 local TaxCollector = require('components.tax_collector')
 local Citizen = require('components.citizen')
 local Miner = require('components.miner')
+local TokenMiner = require('components.token_miner')
 local BearTrap = require('Zones.bear_trap')
 local Vault = require('Zones.vault')
 local Chicken = require('components.chicken')
@@ -21,6 +22,8 @@ local MainHall = require('Zones.main_hall')
 local Teleport = require('Zones.teleport')
 local EmptyArea = require('Zones.empty_area')
 local Mine = require('Zones.mine')
+local Home = require('Zones.home')
+local TokenMine = require('Zones.token_mine')
 
 local M = {}
 
@@ -79,6 +82,10 @@ function M.load()
   -- Add an empty area that can be transformed via M/T/V
   M.empty = EmptyArea.new(220, 240, 80, 32, { label = 'Empty (M/T/V)' })
   M.world:add(M.empty)
+  -- Add a home zone for citizens to sleep
+  M.home = Home.new(420, 240, 60, 36, { label = 'Home' })
+  M.home.on_tick = Home.on_tick
+  M.world:add(M.home)
   -- Add a teleport zone demo
   M.tele = Teleport.new(360, 60, 40, 40, { label = 'Teleport → (80,220)', tx = 80, ty = 220 })
   M.tele.on_tick = Teleport.on_tick
@@ -89,6 +96,18 @@ function M.load()
   M.world:add(M.mine)
   M.miner = Miner.new({ x = 320, y = 180, speed = 80, radius = 6, label = 'Miner' })
   M.world:add(M.miner)
+  -- Add a token-mine and a citizen working as token-miner
+  M.tmine = TokenMine.new(380, 200, 60, 40, { label = 'Token Mine', work_to_ruby = 3, process_interval = 0.4, give_interval = 1.0 })
+  M.tmine.on_tick = TokenMine.on_tick
+  M.world:add(M.tmine)
+  M.token_citizen = Citizen.new({
+    x = 400, y = 180, speed = 80, radius = 6,
+    label = 'Citizen (TokenMiner)',
+    work_def = require('FSMs.token_miner'),
+    -- fatigue profile so they work most of the time
+    fatigue_rate = 0.8, rest_rate = 3.0, fatigue_max = 8, fatigue_min = 2,
+  })
+  M.world:add(M.token_citizen)
 end
 
 function M.update(dt)
