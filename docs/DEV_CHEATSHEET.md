@@ -138,3 +138,12 @@ This keeps tests and LÖVE consistent.
 - Add more systems (collision, input, animation) with pure logic where possible.
 - Split draw/audio systems to isolate `love.*` calls.
 - Consider a second world or priorities to control update/draw ordering.
+- Dynamic component changes and system membership
+  - When adding/removing components at runtime (e.g., toggling a tag like `collectable`), ensure the ECS notices the change.
+  - In Tiny-style worlds, re-adding the entity (`world:add(entity)`) marks it as changed so systems rebuild their filters.
+  - Symptoms when omitted: a system that should react to the new component (e.g., collection) does nothing until another change happens.
+
+- Collector safety and drop cooldowns
+  - Prevent self-collection: collectors should not process themselves (simple `if collector == item then skip` guard).
+  - Avoid instant re-collection after drop by setting a short `just_dropped_cd` cooldown on the dropped entity.
+  - Prefer owner- or slot-specific accept policies (e.g., cars accept only `driver`) to avoid unintended pickups.

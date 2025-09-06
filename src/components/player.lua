@@ -1,6 +1,7 @@
 local function new_player(opts)
   opts = opts or {}
   local Inventory = require('inventory')
+  local match = require('entity_match')
   local Agent = require('components.agent')
   local e = Agent.new({
     x = opts.x or 20,
@@ -24,7 +25,9 @@ local function new_player(opts)
       return item and item.agent == true
     end,
   })
-  -- Player collects every collectable by default; override if needed
+  -- Policy: accept any collectable; rely on global self-protection in Collect system
+  e.collect_query = match.build_query({ whitelist = { all_of = {'collectable'} } })
+  -- Back-compat fallback: accept any collectable (self-protection is enforced by Collect system)
   e.accept_collectable = function(self, item)
     return item ~= nil and item.collectable ~= nil
   end

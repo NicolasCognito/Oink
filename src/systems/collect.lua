@@ -60,6 +60,8 @@ return function()
     local cr = coin.radius or 0
     for i = 1, #self.collectors do
       local c = self.collectors[i]
+      -- Fundamental safety: a collector must never collect itself
+      if c == coin then goto next_collector end
       local rr = c.radius or 0
       -- Check collector's desired items: either membership via collect_query set, or accept_collectable predicate
       local allowed = false
@@ -83,6 +85,7 @@ return function()
         end
         break
       end
+      ::next_collector::
     end
   end
 

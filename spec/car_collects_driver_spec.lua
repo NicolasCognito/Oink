@@ -15,6 +15,8 @@ describe('car collects driver player', function()
     local w = tiny.world(Collect())
     local car = Car.new({ x = 50, y = 50, radius = 8 })
     local p = Player.new({ x = 54, y = 50, speed = 0, radius = 4, label = 'Driver' })
+    -- Ensure only car collects in this test to avoid self-collection race
+    p.collector = false
     -- Make player collectable so collect system can pick it up
     p.collectable = { name = 'driver', value = 0, persistent = true }
     w:add(car); w:add(p)
@@ -29,4 +31,3 @@ describe('car collects driver player', function()
     assert.are.equal(p, car.inventory.slots[1].entity)
   end)
 end)
-

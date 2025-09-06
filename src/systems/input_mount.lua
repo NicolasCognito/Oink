@@ -28,17 +28,19 @@ return function()
     self._cd = math.max(0, (self._cd or 0) - (dt or 0))
     if self._cd > 0 then return end
     if not pressed(self, 'return') then return end
-    local p = avatar.get(self.world)
-    if not p then return end
-    -- Toggle player collectable driver tag
-    if p.collectable and p.collectable.persistent and p.collectable.name == 'driver' then
-      p.collectable = nil
+    local a = avatar.get(self.world)
+    if not a then return end
+    -- Only players can toggle driver collectable; ignore when controlling cars or other entities
+    if not a.player then return end
+    if a.collectable and a.collectable.persistent and a.collectable.name == 'driver' then
+      a.collectable = nil
     else
-      p.collectable = { name = 'driver', value = 0, persistent = true }
+      a.collectable = { name = 'driver', value = 0, persistent = true }
     end
+    -- Mark entity changed so systems with filters notice the component change
+    if self.world and self.world.add then self.world:add(a) end
     self._cd = 0.2
   end
 
   return sys
 end
-

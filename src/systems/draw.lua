@@ -1,5 +1,6 @@
 local M = {}
 local avatar = require('avatar')
+local collision = require('collision')
 
 local function default_draw_entity(e)
   if not e.pos or not e.drawable then return end
@@ -51,13 +52,12 @@ function M.draw(world)
       default_draw_entity(e)
     end
   end
-  -- Example HUD: draw first controllable entity label/pos
-  for i = 1, #world.entities do
-    local e = world.entities[i]
-    if e and e.label and e.pos then
-      love.graphics.print(e.label .. string.format(' (x=%.0f,y=%.0f)', e.pos.x, e.pos.y), 10, 10)
-      break
-    end
+  -- HUD: active entity label and position
+  local active = avatar.get(world)
+  if active and active.pos then
+    local who = active.label or 'Entity'
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print(who .. string.format(' (x=%.0f,y=%.0f)', active.pos.x, active.pos.y), 10, 10)
   end
 
   -- Active controller inventory HUD at bottom (fallback to first player)
@@ -91,6 +91,54 @@ function M.draw(world)
     local h = (love.graphics.getHeight and love.graphics.getHeight()) or 300
     love.graphics.setColor(1,1,1,1)
     love.graphics.print(text, 10, h - 16)
+  end
+
+  -- Slot inspector: show detailed info about the selected slot of the active holder
+  do
+    local holder = avatar.get(world)
+    if not holder then
+      for i = 1, #world.entities do
+        local e = world.entities[i]
+        if e and e.player and e.inventory then holder = e; break end
+      end
+    end
+    if holder and holder.inventory then
+      local inv = holder.inventory
+      local idx = inv.active_index or 1
+      local s = inv.slots and inv.slots[idx]
+      love.graphics.setColor(1,1,1,1)
+      local y = 26
+      love.graphics.print('Slot Inspector:', 10, y); y = y + 14
+      love.graphics.print(string.format('Active: %d  permanent=%s reserved=%s default=%s', idx, tostring(s and s.permanent or false), tostring(s and s.reserved or false), tostring(s and s.default_name or '')), 10, y); y = y + 14
+      if s then
+        love.graphics.print(string.format('Slot name=%s count=%s value=%s', tostring(s.name), tostring(s.count or 0), tostring(s.value or 0)), 10, y); y = y + 14
+        if s.entity then
+          local e = s.entity
+          love.graphics.print('Item type: entity', 10, y); y = y + 14
+          if e.label then love.graphics.print('Label: '..tostring(e.label), 10, y); y = y + 14 end
+          local flags = {}
+          for _, k in ipairs({'agent','player','driver','collector','car','zone'}) do
+            if e[k] then flags[#flags+1] = k end
+          end
+          love.graphics.print('Flags: '.. ( (#flags>0) and table.concat(flags, ',') or '-' ), 10, y); y = y + 14
+          if e.collectable then
+            local c = e.collectable
+            love.graphics.print(string.format('Collectable: name=%s value=%s persistent=%s channel=%s', tostring(c.name), tostring(c.value or 0), tostring(c.persistent or false), tostring(c.channel or '')), 10, y); y = y + 14
+          end
+          if e.pos then
+            love.graphics.print(string.format('Pos: x=%.1f y=%.1f r=%s', e.pos.x or 0, e.pos.y or 0, tostring(e.radius or '-')), 10, y); y = y + 14
+          end
+        else
+          love.graphics.print('Item type: record', 10, y); y = y + 14
+          love.graphics.print(string.format('Record: name=%s count=%s value=%s', tostring(s.name), tostring(s.count or 0), tostring(s.value or 0)), 10, y); y = y + 14
+        end
+        if type(s.accept) == 'function' then
+          love.graphics.print('Slot has accept policy (function)', 10, y); y = y + 14
+        end
+      else
+        love.graphics.print('No slot at this index', 10, y)
+      end
+    end
   end
 end
 

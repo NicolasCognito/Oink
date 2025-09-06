@@ -17,7 +17,7 @@ describe('input_mount toggles driver collectable on Enter', function()
     love.keyboard = { isDown = function(k) return keys[k] == true end }
 
     local w = tiny.world(InputMount())
-    local p = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true }
+    local p = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, player=true }
     w:add(p)
     w:update(0)
     avatar.set(w, p)
