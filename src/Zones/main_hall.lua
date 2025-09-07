@@ -2,6 +2,8 @@ local spawn = require('spawn')
 local Inventory = require('inventory')
 local TaxCollector = require('components.tax_collector')
 
+local H_zone_mode = require('input.handlers.zone_mode')
+
 local function new_main_hall(x, y, w, h, opts)
   opts = opts or {}
   local z = {
@@ -11,10 +13,12 @@ local function new_main_hall(x, y, w, h, opts)
     rect = { x = x or 0, y = y or 0, w = w or 60, h = h or 40 },
     label = opts.label or 'Main Hall',
     drawable = true,
-    mode_index = 1,
-    modes = { 'spawn_collector', 'buff_collectors' },
+    modes = { { id='spawn_collector', name='Spawn' }, { id='buff_collectors', name='Buff' } },
     _sink = { items = {}, items_value = {}, count = 0, value = 0 },
   }
+  -- attach mode handler for Q/E rotation
+  z.input_handlers = z.input_handlers or {}
+  table.insert(z.input_handlers, H_zone_mode({ repeat_rate = 0.25 }))
   return z
 end
 
@@ -65,19 +69,15 @@ local actions = {
 
 local function on_tick(zone, ctx)
   if zone.active == false then return end
-  local mode = zone.modes[zone.mode_index or 1]
-  local fn = actions[mode]
+  local active = zone.modes and zone.modes[1]
+  local key = active and (active.id or active)
+  local fn = key and actions[key] or nil
   if fn then fn(zone, ctx) end
 end
 
-local function on_mode_switch(zone, dir)
-  local n = #zone.modes
-  if n == 0 then return end
-  local idx = (zone.mode_index or 1) + (dir or 0)
-  if idx < 1 then idx = n end
-  if idx > n then idx = 1 end
-  zone.mode_index = idx
-  zone.label = 'Main Hall: ' .. tostring(zone.modes[idx])
+local function _on_mode_change(zone, prev, nextm)
+  local name = (nextm and (nextm.name or nextm.id)) or '?'
+  zone.label = 'Main Hall: ' .. tostring(name)
 end
 
-return { new = new_main_hall, on_tick = on_tick, on_mode_switch = on_mode_switch }
+return { new = new_main_hall, on_tick = on_tick, _on_mode_change = _on_mode_change }

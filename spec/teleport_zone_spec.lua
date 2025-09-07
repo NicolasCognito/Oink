@@ -41,8 +41,10 @@ describe('teleport zone', function()
     z.on_tick = Teleport.on_tick
     local p = Player.new({ x = 15, y = 10, speed = 0 }) -- right half
     w:add(z); w:add(p)
-    -- Toggle off while in right half
-    z.on_key(z, p, 'p', { world = w, agents = { p } })
+    -- Toggle off while in right half via on_input
+    local input = { pressed = function(k) return k == 'p' end }
+    -- Call the zone's on_input directly with player in ctx
+    z.on_input(z, input, { world = w, player = p })
     -- Move to left half and verify no teleport when disabled
     p.pos.x, p.pos.y = 6, 10
     w:update(0.016)
@@ -50,7 +52,7 @@ describe('teleport zone', function()
     assert.are.equal(10, p.pos.y)
     -- Toggle back on
     p.pos.x, p.pos.y = 15, 10
-    z.on_key(z, p, 'p', { world = w, agents = { p } })
+    z.on_input(z, input, { world = w, player = p })
     -- Process a tick to clear left-half membership
     w:update(0)
     -- Enter left and verify teleport

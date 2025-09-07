@@ -1,4 +1,8 @@
 local Coll = require('collision')
+local avatar = require('avatar')
+
+-- forward declare
+local on_input
 
 local function new_teleport(x, y, w, h, opts)
   opts = opts or {}
@@ -13,17 +17,9 @@ local function new_teleport(x, y, w, h, opts)
     ty = opts.ty or 0,
     enabled = opts.enabled ~= false,
     zone_state = { inside_agents = {}, inside_items = {} },
-    on_key = function(zone, player, key, ctx)
-      key = string.lower(key or '')
-      if key ~= 'p' or not player or not player.pos then return end
-      local function is_panel(c) return c and c.id == 'panel' end
-      if Coll.zone_any_contains_point(zone, player.pos.x, player.pos.y, { filter = is_panel }) then
-        zone.enabled = not zone.enabled
-        local status = zone.enabled and 'ON' or 'OFF'
-        zone.label = string.format('Teleport [%s] (L=TP, R=Panel)', status)
-      end
-    end,
   }
+  -- attach input handler for panel toggle
+  z.on_input = on_input
   local bw, bh = (w or 48), (h or 32)
   z.colliders = {
     -- Left teleport area as a circle centered in the left half
@@ -67,4 +63,19 @@ local function on_tick(zone, ctx)
   end
 end
 
-return { new = new_teleport, on_tick = on_tick }
+-- Direct input: toggle enabled when player presses P while in the panel region
+function on_input(zone, input, ctx)
+  if not input or not input.pressed then return end
+  if not input.pressed('p') then return end
+  local p = (ctx and ctx.player) or (ctx and ctx.active_avatar)
+  if (not p) and ctx and ctx.world and avatar and avatar.get then p = avatar.get(ctx.world) end
+  if not p or not p.pos then return end
+  local function is_panel(c) return c and c.id == 'panel' end
+  if Coll.zone_any_contains_point(zone, p.pos.x, p.pos.y, { filter = is_panel }) then
+    zone.enabled = not zone.enabled
+    local status = zone.enabled and 'ON' or 'OFF'
+    zone.label = string.format('Teleport [%s] (L=TP, R=Panel)', status)
+  end
+end
+
+return { new = new_teleport, on_tick = on_tick, on_input = on_input }

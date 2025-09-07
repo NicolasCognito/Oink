@@ -3,6 +3,9 @@ local function new_player(opts)
   local Inventory = require('inventory')
   local match = require('entity_match')
   local Agent = require('components.agent')
+  local H_character = require('input.handlers.character')
+  local H_inventory = require('input.handlers.inventory')
+  local H_mount = require('input.handlers.mount')
   local e = Agent.new({
     x = opts.x or 20,
     y = opts.y or 60,
@@ -31,6 +34,11 @@ local function new_player(opts)
   e.accept_collectable = function(self, item)
     return item ~= nil and item.collectable ~= nil
   end
+  -- Attach input handlers: movement, inventory, mount
+  e.input_handlers = e.input_handlers or {}
+  table.insert(e.input_handlers, H_character({ speed = e.speed }))
+  table.insert(e.input_handlers, H_inventory({}))
+  table.insert(e.input_handlers, H_mount({}))
   return e
 end
 

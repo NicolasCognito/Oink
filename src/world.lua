@@ -29,8 +29,6 @@ local function create_world()
   -- input -> context -> zones -> zone_collect -> agents -> move -> bounds -> collectables -> collect -> destroyer -> spawner
   world:add(CoinSpawner({ interval = 0.5, margin = 10 }))
   world:add(Input())
-  world:add(InputInventory())
-  world:add(InputMount())
   world:add(Context())
   world:add(Zones())
   world:add(ZoneCollect())

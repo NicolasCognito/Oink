@@ -3,8 +3,7 @@ local TimeVortex = require('Zones.time_vortex')
 local Vault = require('Zones.vault')
 local Home = require('Zones.home')
 
--- forward declare handler to allow reference in constructor
-local on_key
+local on_input
 
 local function new_empty_area(x, y, w, h, opts)
   opts = opts or {}
@@ -16,43 +15,40 @@ local function new_empty_area(x, y, w, h, opts)
     label = opts.label or 'Empty Area (M=Mine, T=Time, V=Vault, H=Home)',
     drawable = true,
   }
-  z.on_key = function(zone, player, key, ctx)
-    return on_key(zone, player, key, ctx)
+  z.on_input = function(zone, input, ctx)
+    return on_input(zone, input, ctx)
   end
   return z
 end
 
-function on_key(zone, player, key, ctx)
+function on_input(zone, input, ctx)
+  -- support direct input: press M/T/V/H when overlapping
   if zone.active == false then return end
-  key = string.lower(key or '')
   local x, y, w, h = zone.rect.x, zone.rect.y, zone.rect.w, zone.rect.h
   local world = ctx and ctx.world
   if not world then return end
-
   local replace = nil
-  if key == 'm' then
+  if input.pressed('m') then
     replace = Mine.new(x, y, w, h, { label = 'Mine' })
     replace.on_tick = Mine.on_tick
-  elseif key == 't' then
+  elseif input.pressed('t') then
     replace = TimeVortex.new(x, y, w, h, { modes = {
       { name = 'Stasis', scale = 0.3 },
       { name = 'Haste',  scale = 2.5 },
     }})
     replace.on_tick = TimeVortex.on_tick
     replace.on_mode_switch = TimeVortex.on_mode_switch
-  elseif key == 'v' then
+  elseif input.pressed('v') then
     replace = Vault.new(x, y, w, h, { label = 'Vault' })
     replace.on_tick = Vault.on_tick
-  elseif key == 'h' then
+  elseif input.pressed('h') then
     replace = Home.new(x, y, w, h, { label = 'Home' })
     replace.on_tick = Home.on_tick
   end
-
   if replace then
-    -- Swap zones
     world:remove(zone)
     world:add(replace)
   end
 end
 
-return { new = new_empty_area, on_key = on_key }
+return { new = new_empty_area, on_input = on_input }

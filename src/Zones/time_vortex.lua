@@ -1,3 +1,5 @@
+local H_zone_mode = require('input.handlers.zone_mode')
+
 local function new_time_vortex(x, y, w, h, opts)
   opts = opts or {}
   local z = {
@@ -11,14 +13,18 @@ local function new_time_vortex(x, y, w, h, opts)
     affect_items = opts.affect_items or false,
     affect_zones = (opts.affect_zones ~= false),
     affected = {},
-    -- optional modes: { {name='Stasis', scale=0.3}, {name='Haste', scale=2.5} }
+    -- optional modes: array; first element is active
     modes = opts.modes,
-    mode_index = 1,
   }
   if z.modes and z.modes[1] then
-    z.scale = z.modes[1].scale or z.scale
-    local name = z.modes[1].name or ('x' .. tostring(z.scale))
+    local active = z.modes[1]
+    z.scale = active.scale or z.scale
+    local name = active.name or ('x' .. tostring(z.scale))
     z.label = opts.label or ('Time: ' .. name)
+  end
+  if z.modes and #z.modes > 0 then
+    z.input_handlers = z.input_handlers or {}
+    table.insert(z.input_handlers, H_zone_mode({ repeat_rate = 0.25 }))
   end
   return z
 end
@@ -65,17 +71,12 @@ local function on_tick(zone, ctx)
   end
 end
 
--- Optional: support mode switching (Q/E while player overlaps handled by input system)
-local function on_mode_switch(zone, dir, ctx)
-  if not zone.modes or #zone.modes == 0 then return end
-  local n = #zone.modes
-  local idx = (zone.mode_index or 1) + (dir or 0)
-  if idx < 1 then idx = n end
-  if idx > n then idx = 1 end
-  zone.mode_index = idx
-  local mode = zone.modes[idx]
-  zone.scale = mode.scale or zone.scale
-  local name = mode.name or ('x' .. tostring(zone.scale))
+-- Standardized mode change hook
+local function _on_mode_change(zone, prev_mode, next_mode, ctx)
+  if next_mode and next_mode.scale then
+    zone.scale = next_mode.scale
+  end
+  local name = (next_mode and next_mode.name) or ('x' .. tostring(zone.scale))
   zone.label = 'Time: ' .. name
 
   -- Immediately apply new multiplier to entities/zones currently inside
@@ -111,4 +112,26 @@ local function on_mode_switch(zone, dir, ctx)
   end
 end
 
-return { new = new_time_vortex, on_tick = on_tick, on_mode_switch = on_mode_switch }
+-- Back-compat wrapper: interpret dir and rotate modes accordingly
+local function on_mode_switch(zone, dir, ctx)
+  if not zone.modes or #zone.modes == 0 then return end
+  local prev, nextm
+  if (dir or 0) > 0 then
+    -- next: move first to end
+    prev = zone.modes[1]
+    table.remove(zone.modes, 1)
+    table.insert(zone.modes, prev)
+    nextm = zone.modes[1]
+  elseif (dir or 0) < 0 then
+    -- prev: move last to front
+    prev = zone.modes[1]
+    local last = table.remove(zone.modes)
+    table.insert(zone.modes, 1, last)
+    nextm = zone.modes[1]
+  else
+    return
+  end
+  _on_mode_change(zone, prev, nextm, ctx)
+end
+
+return { new = new_time_vortex, on_tick = on_tick, _on_mode_change = _on_mode_change }
