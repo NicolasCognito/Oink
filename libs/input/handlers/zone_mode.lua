@@ -29,8 +29,8 @@ return function(opts)
       elseif input.repeatPressed('q', rate, dt) then
         prev, nextm = rotate_prev(zone.modes)
       end
-      if nextm and zone._on_mode_change then
-        zone._on_mode_change(zone, prev, nextm, ctx)
+      if nextm and zone.on_mode_change then
+        zone.on_mode_change(zone, prev, nextm, ctx)
       end
     end
   }

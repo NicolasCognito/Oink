@@ -47,7 +47,17 @@ local function zone_outline_handler()
         end
       end
       gfx.setColor(1,1,1,1)
-      if zone.label then gfx.print(zone.label, zone.rect.x + 2, zone.rect.y - 14) end
+      if zone.label then
+        local label = zone.label
+        if zone.modes and #zone.modes > 1 then
+          local cur = zone.modes[1]
+          local mname = (type(cur) == 'table' and cur.name) and tostring(cur.name) or nil
+          if mname and #mname > 0 then
+            label = label .. ':' .. mname
+          end
+        end
+        gfx.print(label, zone.rect.x + 2, zone.rect.y - 14)
+      end
     end,
   }
 end

@@ -19,6 +19,8 @@ local function new_main_hall(x, y, w, h, opts)
   -- attach mode handler for Q/E rotation
   z.input_handlers = z.input_handlers or {}
   table.insert(z.input_handlers, H_zone_mode({ repeat_rate = 0.25 }))
+  -- provide standardized mode-change hook on the instance
+  z.on_mode_change = _on_mode_change
   return z
 end
 
@@ -80,4 +82,6 @@ local function _on_mode_change(zone, prev, nextm)
   zone.label = 'Main Hall: ' .. tostring(name)
 end
 
-return { new = new_main_hall, on_tick = on_tick, _on_mode_change = _on_mode_change }
+-- Attach standardized hook name for handler usage
+local M = { new = new_main_hall, on_tick = on_tick, on_mode_change = _on_mode_change }
+return M

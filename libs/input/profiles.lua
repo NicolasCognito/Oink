@@ -34,7 +34,8 @@ function M.ensure(e)
       end
     else
       if not has_handler(e, 'character') then
-        add(e, H_character({ speed = e.speed }))
+        -- Use live `who.speed` so runtime changes (e.g., Slow zone, hunger) take effect
+        add(e, H_character({}))
       end
     end
   end
@@ -49,4 +50,3 @@ function M.ensure(e)
 end
 
 return M
-

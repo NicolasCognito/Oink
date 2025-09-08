@@ -28,13 +28,13 @@ describe('time vortex mode switching', function()
     assert.are.equal(0.3, agent._time_scale_vortex)
 
     -- Switch to next mode (Haste) while agent remains inside
-    -- Rotate modes and call standardized _on_mode_change hook
+    -- Rotate modes and call standardized on_mode_change hook
     local snapshot = { agents = { agent } }
     local prev = v.modes[1]
     table.remove(v.modes, 1)
     table.insert(v.modes, prev)
     local nextm = v.modes[1]
-    TV._on_mode_change(v, prev, nextm, snapshot)
+    TV.on_mode_change(v, prev, nextm, snapshot)
     assert.are.equal(2.5, agent._time_scale_vortex)
   end)
 end)

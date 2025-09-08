@@ -24,6 +24,23 @@ local function has_zone_type(world, typ)
 end
 
 describe('empty area zone transform controls', function()
+  it('builds current selection with B (defaults to Mine)', function()
+    local Context = require('systems.context_provider')
+    local w = tiny.world(Context(), Composer(), Input(), Zones())
+    local p = Player.new({ x=10, y=10 })
+    local z = Empty.new(0,0,40,40)
+    w:add(p); w:add(z)
+    w:update(0)
+    local avatar = require('avatar')
+    avatar.set(w, p)
+    -- Press B for one frame
+    love.keyboard.isDown = function(key) return key == 'b' end
+    w:update(0.016)
+    -- Release keys and flush add/remove
+    love.keyboard.isDown = function() return false end
+    w:update(0)
+    assert.is_true(has_zone_type(w, 'mine'))
+  end)
   it('transforms to a Mine when pressing M', function()
     local Context = require('systems.context_provider')
     local w = tiny.world(Context(), Composer(), Input(), Zones())
