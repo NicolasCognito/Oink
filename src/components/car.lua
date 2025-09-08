@@ -28,16 +28,7 @@ local function new_car(opts)
       return it and it.collectable and it.driver == true
     end
   })
-  -- Attach vehicle control handler for when the car is the active avatar
-  e.input_handlers = e.input_handlers or {}
-  table.insert(e.input_handlers, H_vehicle({
-    accel = opts.accel or 220,
-    max_speed = opts.max_speed or 200,
-    turn_rate = opts.turn_rate or (math.pi),
-    friction = opts.friction or 150,
-  }))
-  -- Allow interacting with the car's inventory (slot 1 holds driver)
-  table.insert(e.input_handlers, H_inventory({}))
+  -- Handlers are attached centrally by input profiles based on components
   return e
 end
 

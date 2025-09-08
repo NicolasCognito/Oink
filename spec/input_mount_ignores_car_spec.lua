@@ -7,7 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local avatar = require('avatar')
-local InputMount = require('systems.input_mount')
+local Input = require('systems.input')
 local Car = require('components.car')
 
 describe('input_mount ignores non-player (car) for Enter toggle', function()
@@ -17,7 +17,7 @@ describe('input_mount ignores non-player (car) for Enter toggle', function()
     _G.love = _G.love or {}
     love.keyboard = { isDown = function(k) return keys[k] == true end }
 
-    local w = tiny.world(InputMount())
+    local w = tiny.world(Input())
     local car = Car.new({ x = 0, y = 0 })
     car.controllable = true
     w:add(car)
@@ -32,4 +32,3 @@ describe('input_mount ignores non-player (car) for Enter toggle', function()
     assert.is_nil(car.collectable)
   end)
 end)
-

@@ -24,6 +24,7 @@ local EmptyArea = require('Zones.empty_area')
 local Mine = require('Zones.mine')
 local Home = require('Zones.home')
 local TokenMine = require('Zones.token_mine')
+local Shop = require('Zones.shop')
 local Car = require('components.car')
 
 local M = {}
@@ -117,6 +118,18 @@ function M.load()
   -- Add a car at the right-bottom area for driving demo
   M.car = Car.new({ x = 460, y = 260, radius = 10, label = 'Car' })
   M.world:add(M.car)
+
+  -- Add a Shop zone in an unused screen area (top-right by default)
+  do
+    local W = (love.graphics and love.graphics.getWidth and love.graphics.getWidth()) or 800
+    local H = (love.graphics and love.graphics.getHeight and love.graphics.getHeight()) or 600
+    local zw, zh = 80, 40
+    local zx = math.max(20, W - (zw + 20))
+    local zy = 60
+    M.shop = Shop.new(zx, zy, zw, zh, { label = 'Shop' })
+    M.shop.on_tick = Shop.on_tick
+    M.world:add(M.shop)
+  end
 end
 
 function M.update(dt)

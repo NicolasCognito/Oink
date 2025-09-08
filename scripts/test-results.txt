@@ -2,232 +2,237 @@
 [----------] Global test environment setup.
 [----------] Running tests from spec/ai_movement_spec.lua
 [ RUN      ] spec/ai_movement_spec.lua:9: ai.movement helpers computes normalized direction
-[       OK ] spec/ai_movement_spec.lua:9: ai.movement helpers computes normalized direction (3.96 ms)
+[       OK ] spec/ai_movement_spec.lua:9: ai.movement helpers computes normalized direction (3.80 ms)
 [ RUN      ] spec/ai_movement_spec.lua:15: ai.movement helpers seek returns velocity scaled by speed
-[       OK ] spec/ai_movement_spec.lua:15: ai.movement helpers seek returns velocity scaled by speed (3.52 ms)
+[       OK ] spec/ai_movement_spec.lua:15: ai.movement helpers seek returns velocity scaled by speed (3.41 ms)
 [ RUN      ] spec/ai_movement_spec.lua:21: ai.movement helpers within checks radius using squared distance
-[       OK ] spec/ai_movement_spec.lua:21: ai.movement helpers within checks radius using squared distance (2.76 ms)
-[----------] 3 tests from spec/ai_movement_spec.lua (45.79 ms total)
+[       OK ] spec/ai_movement_spec.lua:21: ai.movement helpers within checks radius using squared distance (4.10 ms)
+[----------] 3 tests from spec/ai_movement_spec.lua (62.68 ms total)
 
 [----------] Running tests from spec/avatar_spec.lua
 [ RUN      ] spec/avatar_spec.lua:12: avatar control sets, gets, and cycles exactly one controlled entity
-[       OK ] spec/avatar_spec.lua:12: avatar control sets, gets, and cycles exactly one controlled entity (9.63 ms)
-[----------] 1 test from spec/avatar_spec.lua (29.37 ms total)
+[       OK ] spec/avatar_spec.lua:12: avatar control sets, gets, and cycles exactly one controlled entity (9.75 ms)
+[----------] 1 test from spec/avatar_spec.lua (33.88 ms total)
 
 [----------] Running tests from spec/car_collects_driver_spec.lua
 [ RUN      ] spec/car_collects_driver_spec.lua:14: car collects driver player car picks up player with driver component into slot 1
-[       OK ] spec/car_collects_driver_spec.lua:14: car collects driver player car picks up player with driver component into slot 1 (12.16 ms)
-[----------] 1 test from spec/car_collects_driver_spec.lua (38.66 ms total)
+[       OK ] spec/car_collects_driver_spec.lua:14: car collects driver player car picks up player with driver component into slot 1 (10.08 ms)
+[----------] 1 test from spec/car_collects_driver_spec.lua (38.08 ms total)
 
 [----------] Running tests from spec/car_control_handoff_spec.lua
 [ RUN      ] spec/car_control_handoff_spec.lua:14: car control handoff switches to car when driver present, back to driver when removed
-[       OK ] spec/car_control_handoff_spec.lua:14: car control handoff switches to car when driver present, back to driver when removed (13.58 ms)
-[----------] 1 test from spec/car_control_handoff_spec.lua (40.92 ms total)
+[       OK ] spec/car_control_handoff_spec.lua:14: car control handoff switches to car when driver present, back to driver when removed (14.84 ms)
+[----------] 1 test from spec/car_control_handoff_spec.lua (42.91 ms total)
 
 [----------] Running tests from spec/chicken_vortex_spec.lua
 [ RUN      ] spec/chicken_vortex_spec.lua:27: chicken under time vortex lays eggs roughly 2x faster with 2.0x time scale
-[       OK ] spec/chicken_vortex_spec.lua:27: chicken under time vortex lays eggs roughly 2x faster with 2.0x time scale (88.17 ms)
+[       OK ] spec/chicken_vortex_spec.lua:27: chicken under time vortex lays eggs roughly 2x faster with 2.0x time scale (143.61 ms)
 [ RUN      ] spec/chicken_vortex_spec.lua:58: chicken under time vortex does not advance chicken timers when time_scale = 0
-[       OK ] spec/chicken_vortex_spec.lua:58: chicken under time vortex does not advance chicken timers when time_scale = 0 (23.30 ms)
+[       OK ] spec/chicken_vortex_spec.lua:58: chicken under time vortex does not advance chicken timers when time_scale = 0 (35.22 ms)
 [ RUN      ] spec/chicken_vortex_spec.lua:74: chicken under time vortex restores original time_scale after exiting the vortex
-[       OK ] spec/chicken_vortex_spec.lua:74: chicken under time vortex restores original time_scale after exiting the vortex (9.51 ms)
-[----------] 3 tests from spec/chicken_vortex_spec.lua (166.89 ms total)
+[       OK ] spec/chicken_vortex_spec.lua:74: chicken under time vortex restores original time_scale after exiting the vortex (17.48 ms)
+[----------] 3 tests from spec/chicken_vortex_spec.lua (257.03 ms total)
 
 [----------] Running tests from spec/citizen_fsm_spec.lua
 [ RUN      ] spec/citizen_fsm_spec.lua:24: citizen composer fsm switches from working to vacation on fatigue, then back
-[       OK ] spec/citizen_fsm_spec.lua:24: citizen composer fsm switches from working to vacation on fatigue, then back (25.78 ms)
-[----------] 1 test from spec/citizen_fsm_spec.lua (45.78 ms total)
+[       OK ] spec/citizen_fsm_spec.lua:24: citizen composer fsm switches from working to vacation on fatigue, then back (26.04 ms)
+[----------] 1 test from spec/citizen_fsm_spec.lua (49.53 ms total)
 
 [----------] Running tests from spec/citizen_hunger_spec.lua
 [ RUN      ] spec/citizen_hunger_spec.lua:18: citizen hunger behavior becomes hungry, collects an egg (food), and resumes working
-[       OK ] spec/citizen_hunger_spec.lua:18: citizen hunger behavior becomes hungry, collects an egg (food), and resumes working (8.93 ms)
-[----------] 1 test from spec/citizen_hunger_spec.lua (34.99 ms total)
+[       OK ] spec/citizen_hunger_spec.lua:18: citizen hunger behavior becomes hungry, collects an egg (food), and resumes working (11.20 ms)
+[----------] 1 test from spec/citizen_hunger_spec.lua (47.25 ms total)
 
 [----------] Running tests from spec/collect_multi_spec.lua
 [ RUN      ] spec/collect_multi_spec.lua:12: collect system (generic collectors) credits the overlapping collector and removes the coin
-[       OK ] spec/collect_multi_spec.lua:12: collect system (generic collectors) credits the overlapping collector and removes the coin (8.82 ms)
-[----------] 1 test from spec/collect_multi_spec.lua (28.34 ms total)
+[       OK ] spec/collect_multi_spec.lua:12: collect system (generic collectors) credits the overlapping collector and removes the coin (8.84 ms)
+[----------] 1 test from spec/collect_multi_spec.lua (29.84 ms total)
 
 [----------] Running tests from spec/collect_spec.lua
 [ RUN      ] spec/collect_spec.lua:12: collect system removes coin and increments score on overlap
-[       OK ] spec/collect_spec.lua:12: collect system removes coin and increments score on overlap (7.28 ms)
-[----------] 1 test from spec/collect_spec.lua (27.28 ms total)
+[       OK ] spec/collect_spec.lua:12: collect system removes coin and increments score on overlap (7.13 ms)
+[----------] 1 test from spec/collect_spec.lua (28.67 ms total)
 
 [----------] Running tests from spec/drop_on_vault_spec.lua
 [ RUN      ] spec/drop_on_vault_spec.lua:18: dropping on vault coin dropped on vault goes into vault, not back to player
-[       OK ] spec/drop_on_vault_spec.lua:18: dropping on vault coin dropped on vault goes into vault, not back to player (14.91 ms)
-[----------] 1 test from spec/drop_on_vault_spec.lua (40.61 ms total)
+[       OK ] spec/drop_on_vault_spec.lua:18: dropping on vault coin dropped on vault goes into vault, not back to player (15.04 ms)
+[----------] 1 test from spec/drop_on_vault_spec.lua (41.92 ms total)
 
 [----------] Running tests from spec/empty_area_spec.lua
 [ RUN      ] spec/empty_area_spec.lua:26: empty area zone transform controls transforms to a Mine when pressing M
-[       OK ] spec/empty_area_spec.lua:26: empty area zone transform controls transforms to a Mine when pressing M (10.94 ms)
+[       OK ] spec/empty_area_spec.lua:26: empty area zone transform controls transforms to a Mine when pressing M (12.37 ms)
 [ RUN      ] spec/empty_area_spec.lua:40: empty area zone transform controls transforms to a Time Vortex when pressing T
-[       OK ] spec/empty_area_spec.lua:40: empty area zone transform controls transforms to a Time Vortex when pressing T (11.22 ms)
+[       OK ] spec/empty_area_spec.lua:40: empty area zone transform controls transforms to a Time Vortex when pressing T (13.32 ms)
 [ RUN      ] spec/empty_area_spec.lua:52: empty area zone transform controls transforms to a Vault when pressing V
-[       OK ] spec/empty_area_spec.lua:52: empty area zone transform controls transforms to a Vault when pressing V (10.84 ms)
-[----------] 3 tests from spec/empty_area_spec.lua (82.46 ms total)
+[       OK ] spec/empty_area_spec.lua:52: empty area zone transform controls transforms to a Vault when pressing V (14.27 ms)
+[----------] 3 tests from spec/empty_area_spec.lua (112.13 ms total)
 
 [----------] Running tests from spec/entity_match_spec.lua
 [ RUN      ] spec/entity_match_spec.lua:11: entity_match policy accepts by whitelist function and respects blacklist
-[       OK ] spec/entity_match_spec.lua:11: entity_match policy accepts by whitelist function and respects blacklist (3.19 ms)
+[       OK ] spec/entity_match_spec.lua:11: entity_match policy accepts by whitelist function and respects blacklist (5.41 ms)
 [ RUN      ] spec/entity_match_spec.lua:24: entity_match policy supports structured any_of/all_of/none_of and where
-[       OK ] spec/entity_match_spec.lua:24: entity_match policy supports structured any_of/all_of/none_of and where (3.69 ms)
+[       OK ] spec/entity_match_spec.lua:24: entity_match policy supports structured any_of/all_of/none_of and where (5.59 ms)
 [ RUN      ] spec/entity_match_spec.lua:37: entity_match policy defaults to accept when whitelist is empty, unless blacklisted
-[       OK ] spec/entity_match_spec.lua:37: entity_match policy defaults to accept when whitelist is empty, unless blacklisted (3.20 ms)
+[       OK ] spec/entity_match_spec.lua:37: entity_match policy defaults to accept when whitelist is empty, unless blacklisted (5.37 ms)
 [ RUN      ] spec/entity_match_spec.lua:47: entity_match policy build_query returns only matching items
-[       OK ] spec/entity_match_spec.lua:47: entity_match policy build_query returns only matching items (3.57 ms)
-[----------] 4 tests from spec/entity_match_spec.lua (58.64 ms total)
+[       OK ] spec/entity_match_spec.lua:47: entity_match policy build_query returns only matching items (3.96 ms)
+[----------] 4 tests from spec/entity_match_spec.lua (87.87 ms total)
 
 [----------] Running tests from spec/expiry_spec.lua
 [ RUN      ] spec/expiry_spec.lua:13: expiry system expires entity after ttl
-[       OK ] spec/expiry_spec.lua:13: expiry system expires entity after ttl (4.96 ms)
+[       OK ] spec/expiry_spec.lua:13: expiry system expires entity after ttl (5.76 ms)
 [ RUN      ] spec/expiry_spec.lua:29: expiry system does not advance when time_scale = 0
-[       OK ] spec/expiry_spec.lua:29: expiry system does not advance when time_scale = 0 (13.29 ms)
+[       OK ] spec/expiry_spec.lua:29: expiry system does not advance when time_scale = 0 (19.85 ms)
 [ RUN      ] spec/expiry_spec.lua:41: expiry system expires faster with integer time_scale > 1 deterministically
-[       OK ] spec/expiry_spec.lua:41: expiry system expires faster with integer time_scale > 1 deterministically (3.27 ms)
-[----------] 3 tests from spec/expiry_spec.lua (61.60 ms total)
+[       OK ] spec/expiry_spec.lua:41: expiry system expires faster with integer time_scale > 1 deterministically (8.43 ms)
+[----------] 3 tests from spec/expiry_spec.lua (99.82 ms total)
 
 [----------] Running tests from spec/home_sleep_spec.lua
 [ RUN      ] spec/home_sleep_spec.lua:16: citizen goes home to sleep seeks a home when fatigued and sleeps until rested
-[       OK ] spec/home_sleep_spec.lua:16: citizen goes home to sleep seeks a home when fatigued and sleeps until rested (46.83 ms)
-[----------] 1 test from spec/home_sleep_spec.lua (72.49 ms total)
+[       OK ] spec/home_sleep_spec.lua:16: citizen goes home to sleep seeks a home when fatigued and sleeps until rested (58.48 ms)
+[----------] 1 test from spec/home_sleep_spec.lua (88.03 ms total)
 
 [----------] Running tests from spec/input_avatar_move_spec.lua
-[ RUN      ] spec/input_avatar_move_spec.lua:13: input routes movement to controlled avatar moves only the controlled entity; Tab switches
-[       OK ] spec/input_avatar_move_spec.lua:13: input routes movement to controlled avatar moves only the controlled entity; Tab switches (11.17 ms)
-[----------] 1 test from spec/input_avatar_move_spec.lua (39.50 ms total)
+[ RUN      ] spec/input_avatar_move_spec.lua:14: input routes movement to controlled avatar moves only the controlled entity; Tab switches
+[       OK ] spec/input_avatar_move_spec.lua:14: input routes movement to controlled avatar moves only the controlled entity; Tab switches (9.81 ms)
+[----------] 1 test from spec/input_avatar_move_spec.lua (44.96 ms total)
 
 [----------] Running tests from spec/input_inventory_avatar_spec.lua
 [ RUN      ] spec/input_inventory_avatar_spec.lua:14: input_inventory targets controlled avatar selects slots on the controlled entity after switching
-[       OK ] spec/input_inventory_avatar_spec.lua:14: input_inventory targets controlled avatar selects slots on the controlled entity after switching (8.32 ms)
-[----------] 1 test from spec/input_inventory_avatar_spec.lua (31.25 ms total)
+[       OK ] spec/input_inventory_avatar_spec.lua:14: input_inventory targets controlled avatar selects slots on the controlled entity after switching (15.81 ms)
+[----------] 1 test from spec/input_inventory_avatar_spec.lua (53.20 ms total)
 
 [----------] Running tests from spec/input_mount_ignores_car_spec.lua
 [ RUN      ] spec/input_mount_ignores_car_spec.lua:14: input_mount ignores non-player (car) for Enter toggle does not set collectable on car when pressing Enter
-[       OK ] spec/input_mount_ignores_car_spec.lua:14: input_mount ignores non-player (car) for Enter toggle does not set collectable on car when pressing Enter (5.99 ms)
-[----------] 1 test from spec/input_mount_ignores_car_spec.lua (35.01 ms total)
+[       OK ] spec/input_mount_ignores_car_spec.lua:14: input_mount ignores non-player (car) for Enter toggle does not set collectable on car when pressing Enter (9.20 ms)
+[----------] 1 test from spec/input_mount_ignores_car_spec.lua (43.73 ms total)
 
 [----------] Running tests from spec/input_mount_toggle_spec.lua
 [ RUN      ] spec/input_mount_toggle_spec.lua:13: input_mount toggles driver collectable on Enter sets and clears player.collectable
-[       OK ] spec/input_mount_toggle_spec.lua:13: input_mount toggles driver collectable on Enter sets and clears player.collectable (10.89 ms)
-[----------] 1 test from spec/input_mount_toggle_spec.lua (31.81 ms total)
+[       OK ] spec/input_mount_toggle_spec.lua:13: input_mount toggles driver collectable on Enter sets and clears player.collectable (14.39 ms)
+[----------] 1 test from spec/input_mount_toggle_spec.lua (54.99 ms total)
 
 [----------] Running tests from spec/inventory_cap_spec.lua
 [ RUN      ] spec/inventory_cap_spec.lua:13: inventory cap prevents collection when full
-[       OK ] spec/inventory_cap_spec.lua:13: inventory cap prevents collection when full (7.43 ms)
-[----------] 1 test from spec/inventory_cap_spec.lua (28.24 ms total)
+[       OK ] spec/inventory_cap_spec.lua:13: inventory cap prevents collection when full (7.97 ms)
+[----------] 1 test from spec/inventory_cap_spec.lua (31.74 ms total)
 
 [----------] Running tests from spec/inventory_reserved_coin_rejects_agent_spec.lua
 [ RUN      ] spec/inventory_reserved_coin_rejects_agent_spec.lua:11: reserved coin slot rejects agent entity without accept keeps agent out of coin slot and routes to agent slot
-[       OK ] spec/inventory_reserved_coin_rejects_agent_spec.lua:11: reserved coin slot rejects agent entity without accept keeps agent out of coin slot and routes to agent slot (9.35 ms)
-[----------] 1 test from spec/inventory_reserved_coin_rejects_agent_spec.lua (30.29 ms total)
+[       OK ] spec/inventory_reserved_coin_rejects_agent_spec.lua:11: reserved coin slot rejects agent entity without accept keeps agent out of coin slot and routes to agent slot (10.17 ms)
+[----------] 1 test from spec/inventory_reserved_coin_rejects_agent_spec.lua (31.09 ms total)
 
 [----------] Running tests from spec/inventory_reserved_entity_slot_label_spec.lua
 [ RUN      ] spec/inventory_reserved_entity_slot_label_spec.lua:11: reserved entity slot preserves label keeps reserved name before, during, and after holding an entity
-[       OK ] spec/inventory_reserved_entity_slot_label_spec.lua:11: reserved entity slot preserves label keeps reserved name before, during, and after holding an entity (13.73 ms)
-[----------] 1 test from spec/inventory_reserved_entity_slot_label_spec.lua (32.70 ms total)
+[       OK ] spec/inventory_reserved_entity_slot_label_spec.lua:11: reserved entity slot preserves label keeps reserved name before, during, and after holding an entity (14.73 ms)
+[----------] 1 test from spec/inventory_reserved_entity_slot_label_spec.lua (35.87 ms total)
 
 [----------] Running tests from spec/inventory_reserved_entity_slot_persists_spec.lua
 [ RUN      ] spec/inventory_reserved_entity_slot_persists_spec.lua:11: custom slot with entity persists accept after remove keeps slot table and accept after dropping persistent entity
-[       OK ] spec/inventory_reserved_entity_slot_persists_spec.lua:11: custom slot with entity persists accept after remove keeps slot table and accept after dropping persistent entity (6.96 ms)
-[----------] 1 test from spec/inventory_reserved_entity_slot_persists_spec.lua (25.71 ms total)
+[       OK ] spec/inventory_reserved_entity_slot_persists_spec.lua:11: custom slot with entity persists accept after remove keeps slot table and accept after dropping persistent entity (7.83 ms)
+[----------] 1 test from spec/inventory_reserved_entity_slot_persists_spec.lua (28.78 ms total)
 
 [----------] Running tests from spec/inventory_slot_accept_spec.lua
 [ RUN      ] spec/inventory_slot_accept_spec.lua:11: inventory slot accept respects reserved slot accept for agents
-[       OK ] spec/inventory_slot_accept_spec.lua:11: inventory slot accept respects reserved slot accept for agents (4.78 ms)
-[----------] 1 test from spec/inventory_slot_accept_spec.lua (23.53 ms total)
+[       OK ] spec/inventory_slot_accept_spec.lua:11: inventory slot accept respects reserved slot accept for agents (4.94 ms)
+[----------] 1 test from spec/inventory_slot_accept_spec.lua (28.38 ms total)
 
 [----------] Running tests from spec/mine_miner_spec.lua
 [ RUN      ] spec/mine_miner_spec.lua:25: mine zone and miner produces rubies around a working miner
-[       OK ] spec/mine_miner_spec.lua:25: mine zone and miner produces rubies around a working miner (18.84 ms)
-[----------] 1 test from spec/mine_miner_spec.lua (44.70 ms total)
+[       OK ] spec/mine_miner_spec.lua:25: mine zone and miner produces rubies around a working miner (35.80 ms)
+[----------] 1 test from spec/mine_miner_spec.lua (68.35 ms total)
 
 [----------] Running tests from spec/move_spec.lua
 [ RUN      ] spec/move_spec.lua:15: move system moves entities with pos and vel
-[       OK ] spec/move_spec.lua:15: move system moves entities with pos and vel (5.76 ms)
-[----------] 1 test from spec/move_spec.lua (23.79 ms total)
+[       OK ] spec/move_spec.lua:15: move system moves entities with pos and vel (7.38 ms)
+[----------] 1 test from spec/move_spec.lua (32.61 ms total)
 
 [----------] Running tests from spec/player_collect_policy_spec.lua
 [ RUN      ] spec/player_collect_policy_spec.lua:13: player collect policy does not collect itself; still collects coins
-[       OK ] spec/player_collect_policy_spec.lua:13: player collect policy does not collect itself; still collects coins (15.22 ms)
-[----------] 1 test from spec/player_collect_policy_spec.lua (37.28 ms total)
+[       OK ] spec/player_collect_policy_spec.lua:13: player collect policy does not collect itself; still collects coins (9.67 ms)
+[----------] 1 test from spec/player_collect_policy_spec.lua (34.34 ms total)
+
+[----------] Running tests from spec/shop_zone_spec.lua
+[ RUN      ] spec/shop_zone_spec.lua:25: shop zone converts dropped rubies and eggs into coins
+[       OK ] spec/shop_zone_spec.lua:25: shop zone converts dropped rubies and eggs into coins (16.19 ms)
+[----------] 1 test from spec/shop_zone_spec.lua (45.13 ms total)
 
 [----------] Running tests from spec/spawner_spec.lua
 [ RUN      ] spec/spawner_spec.lua:12: spawner system spawns coins on interval
-[       OK ] spec/spawner_spec.lua:12: spawner system spawns coins on interval (6.81 ms)
-[----------] 1 test from spec/spawner_spec.lua (26.06 ms total)
+[       OK ] spec/spawner_spec.lua:12: spawner system spawns coins on interval (6.61 ms)
+[----------] 1 test from spec/spawner_spec.lua (27.63 ms total)
 
 [----------] Running tests from spec/teleport_zone_spec.lua
 [ RUN      ] spec/teleport_zone_spec.lua:15: teleport zone teleports an agent on enter
-[       OK ] spec/teleport_zone_spec.lua:15: teleport zone teleports an agent on enter (12.85 ms)
+[       OK ] spec/teleport_zone_spec.lua:15: teleport zone teleports an agent on enter (10.44 ms)
 [ RUN      ] spec/teleport_zone_spec.lua:27: teleport zone teleports a collectable on enter
-[       OK ] spec/teleport_zone_spec.lua:27: teleport zone teleports a collectable on enter (7.10 ms)
+[       OK ] spec/teleport_zone_spec.lua:27: teleport zone teleports a collectable on enter (6.36 ms)
 [ RUN      ] spec/teleport_zone_spec.lua:38: teleport zone panel on right half toggles teleport via P
-[       OK ] spec/teleport_zone_spec.lua:38: teleport zone panel on right half toggles teleport via P (10.78 ms)
-[----------] 3 tests from spec/teleport_zone_spec.lua (73.76 ms total)
+[       OK ] spec/teleport_zone_spec.lua:38: teleport zone panel on right half toggles teleport via P (14.38 ms)
+[----------] 3 tests from spec/teleport_zone_spec.lua (82.42 ms total)
 
 [----------] Running tests from spec/time_distortion_spec.lua
 [ RUN      ] spec/time_distortion_spec.lua:13: time distortion zone slows agents on enter and restores on exit
-[       OK ] spec/time_distortion_spec.lua:13: time distortion zone slows agents on enter and restores on exit (11.91 ms)
-[----------] 1 test from spec/time_distortion_spec.lua (33.29 ms total)
+[       OK ] spec/time_distortion_spec.lua:13: time distortion zone slows agents on enter and restores on exit (17.02 ms)
+[----------] 1 test from spec/time_distortion_spec.lua (51.76 ms total)
 
 [----------] Running tests from spec/time_scaled_zones_spec.lua
 [ RUN      ] spec/time_scaled_zones_spec.lua:27: zones affected by time vortex ticks ~2x faster when inside 2.0x vortex
-[       OK ] spec/time_scaled_zones_spec.lua:27: zones affected by time vortex ticks ~2x faster when inside 2.0x vortex (26.05 ms)
+[       OK ] spec/time_scaled_zones_spec.lua:27: zones affected by time vortex ticks ~2x faster when inside 2.0x vortex (31.04 ms)
 [ RUN      ] spec/time_scaled_zones_spec.lua:50: zones affected by time vortex pauses zone ticking when inside 0x vortex
-[       OK ] spec/time_scaled_zones_spec.lua:50: zones affected by time vortex pauses zone ticking when inside 0x vortex (15.77 ms)
-[----------] 2 tests from spec/time_scaled_zones_spec.lua (74.13 ms total)
+[       OK ] spec/time_scaled_zones_spec.lua:50: zones affected by time vortex pauses zone ticking when inside 0x vortex (18.31 ms)
+[----------] 2 tests from spec/time_scaled_zones_spec.lua (99.36 ms total)
 
 [----------] Running tests from spec/time_vortex_spec.lua
 [ RUN      ] spec/time_vortex_spec.lua:13: time vortex zone applies and restores time_scale on enter/exit
-[       OK ] spec/time_vortex_spec.lua:13: time vortex zone applies and restores time_scale on enter/exit (11.01 ms)
-[----------] 1 test from spec/time_vortex_spec.lua (32.47 ms total)
+[       OK ] spec/time_vortex_spec.lua:13: time vortex zone applies and restores time_scale on enter/exit (13.84 ms)
+[----------] 1 test from spec/time_vortex_spec.lua (45.04 ms total)
 
 [----------] Running tests from spec/token_mine_miner_spec.lua
 [ RUN      ] spec/token_mine_miner_spec.lua:27: token mine and token miner converts work tokens and occasionally gives rubies
-[       OK ] spec/token_mine_miner_spec.lua:27: token mine and token miner converts work tokens and occasionally gives rubies (99.07 ms)
-[----------] 1 test from spec/token_mine_miner_spec.lua (126.56 ms total)
+[       OK ] spec/token_mine_miner_spec.lua:27: token mine and token miner converts work tokens and occasionally gives rubies (143.77 ms)
+[----------] 1 test from spec/token_mine_miner_spec.lua (176.30 ms total)
 
 [----------] Running tests from spec/vehicle_control_spec.lua
 [ RUN      ] spec/vehicle_control_spec.lua:14: vehicle control handler accelerates with W and turns with A/D
-[       OK ] spec/vehicle_control_spec.lua:14: vehicle control handler accelerates with W and turns with A/D (10.09 ms)
-[----------] 1 test from spec/vehicle_control_spec.lua (44.32 ms total)
+[       OK ] spec/vehicle_control_spec.lua:14: vehicle control handler accelerates with W and turns with A/D (11.81 ms)
+[----------] 1 test from spec/vehicle_control_spec.lua (87.23 ms total)
 
 [----------] Running tests from spec/vortex_mode_switch_spec.lua
 [ RUN      ] spec/vortex_mode_switch_spec.lua:13: time vortex mode switching updates time_scale immediately for entities already inside
-[       OK ] spec/vortex_mode_switch_spec.lua:13: time vortex mode switching updates time_scale immediately for entities already inside (6.82 ms)
-[----------] 1 test from spec/vortex_mode_switch_spec.lua (31.19 ms total)
+[       OK ] spec/vortex_mode_switch_spec.lua:13: time vortex mode switching updates time_scale immediately for entities already inside (9.09 ms)
+[----------] 1 test from spec/vortex_mode_switch_spec.lua (35.24 ms total)
 
 [----------] Running tests from spec/zombie_fsm_spec.lua
 [ RUN      ] spec/zombie_fsm_spec.lua:13: zombie fsm idles when far and chases when near
-[       OK ] spec/zombie_fsm_spec.lua:13: zombie fsm idles when far and chases when near (10.49 ms)
-[----------] 1 test from spec/zombie_fsm_spec.lua (32.28 ms total)
+[       OK ] spec/zombie_fsm_spec.lua:13: zombie fsm idles when far and chases when near (12.17 ms)
+[----------] 1 test from spec/zombie_fsm_spec.lua (36.99 ms total)
 
 [----------] Running tests from spec/zombie_multi_player_spec.lua
 [ RUN      ] spec/zombie_multi_player_spec.lua:13: zombie with multiple players chases nearest player regardless of control
-[       OK ] spec/zombie_multi_player_spec.lua:13: zombie with multiple players chases nearest player regardless of control (10.50 ms)
-[----------] 1 test from spec/zombie_multi_player_spec.lua (34.74 ms total)
+[       OK ] spec/zombie_multi_player_spec.lua:13: zombie with multiple players chases nearest player regardless of control (10.49 ms)
+[----------] 1 test from spec/zombie_multi_player_spec.lua (36.09 ms total)
 
 [----------] Running tests from spec/zone_bear_trap_spec.lua
 [ RUN      ] spec/zone_bear_trap_spec.lua:12: bear trap zone kills first agent entering and deactivates
-[       OK ] spec/zone_bear_trap_spec.lua:12: bear trap zone kills first agent entering and deactivates (8.23 ms)
-[----------] 1 test from spec/zone_bear_trap_spec.lua (27.95 ms total)
+[       OK ] spec/zone_bear_trap_spec.lua:12: bear trap zone kills first agent entering and deactivates (9.12 ms)
+[----------] 1 test from spec/zone_bear_trap_spec.lua (32.48 ms total)
 
 [----------] Running tests from spec/zone_collect_query_spec.lua
 [ RUN      ] spec/zone_collect_query_spec.lua:14: zone_collect collect_query override uses zone.collect_query to limit candidates
-[       OK ] spec/zone_collect_query_spec.lua:14: zone_collect collect_query override uses zone.collect_query to limit candidates (10.00 ms)
-[----------] 1 test from spec/zone_collect_query_spec.lua (34.68 ms total)
+[       OK ] spec/zone_collect_query_spec.lua:14: zone_collect collect_query override uses zone.collect_query to limit candidates (13.43 ms)
+[----------] 1 test from spec/zone_collect_query_spec.lua (38.60 ms total)
 
 [----------] Running tests from spec/zone_input_priority_spec.lua
 [ RUN      ] spec/zone_input_priority_spec.lua:16: zone input priority routes keys to highest-priority overlapped zone
-[       OK ] spec/zone_input_priority_spec.lua:16: zone input priority routes keys to highest-priority overlapped zone (8.60 ms)
-[----------] 1 test from spec/zone_input_priority_spec.lua (38.76 ms total)
+[       OK ] spec/zone_input_priority_spec.lua:16: zone input priority routes keys to highest-priority overlapped zone (11.52 ms)
+[----------] 1 test from spec/zone_input_priority_spec.lua (51.76 ms total)
 
 [----------] Running tests from spec/zone_vault_spec.lua
 [ RUN      ] spec/zone_vault_spec.lua:14: vault zone absorbs coins inside its rect into endless inventory
-[       OK ] spec/zone_vault_spec.lua:14: vault zone absorbs coins inside its rect into endless inventory (12.94 ms)
-[----------] 1 test from spec/zone_vault_spec.lua (37.03 ms total)
+[       OK ] spec/zone_vault_spec.lua:14: vault zone absorbs coins inside its rect into endless inventory (14.06 ms)
+[----------] 1 test from spec/zone_vault_spec.lua (49.10 ms total)
 
 [----------] Global test environment teardown.
-[==========] 54 tests from 40 test files ran. (2033.31 ms total)
-[  PASSED  ] 54 tests.
+[==========] 55 tests from 41 test files ran. (2689.72 ms total)
+[  PASSED  ] 55 tests.

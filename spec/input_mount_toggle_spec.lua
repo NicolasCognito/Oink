@@ -7,7 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local avatar = require('avatar')
-local InputMount = require('systems.input_mount')
+local Input = require('systems.input')
 
 describe('input_mount toggles driver collectable on Enter', function()
   it('sets and clears player.collectable', function()
@@ -16,7 +16,7 @@ describe('input_mount toggles driver collectable on Enter', function()
     _G.love = _G.love or {}
     love.keyboard = { isDown = function(k) return keys[k] == true end }
 
-    local w = tiny.world(InputMount())
+    local w = tiny.world(Input())
     local p = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, player=true }
     w:add(p)
     w:update(0)

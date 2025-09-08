@@ -5,6 +5,7 @@ return function(opts)
   local speed = opts.speed
   return {
     channel = 'actor',
+    kind = 'character',
     on = function(self, who, ctx, input, dt)
       if not who or not who.vel then return end
       local ax, ay = input.axis.move()
@@ -15,4 +16,3 @@ return function(opts)
     end
   }
 end
-

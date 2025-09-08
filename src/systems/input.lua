@@ -10,16 +10,10 @@ local ctx = require('ctx')
 local avatar = require('avatar')
 local collision = require('collision')
 local IH = require('input.helpers')
-local H_character = require('input.handlers.character')
-local H_inventory = require('input.handlers.inventory')
-local H_mount = require('input.handlers.mount')
+local Profiles = require('input.profiles')
 
 return function()
   local sys = tiny.system()
-  -- fallback reusable handlers (used if entity has no input_handlers)
-  sys._h_character = H_character({})
-  sys._h_inventory = H_inventory({})
-  sys._h_mount = H_mount({})
   sys._prev = {}
   sys._active_zone = nil
   sys._sticky_zone = nil
@@ -44,17 +38,12 @@ return function()
       who = avatar.get(self.world)
     end
 
-    -- Actor handlers: per-entity if available, else fallback to default trio
-    if who then
-      if who.input_handlers and #who.input_handlers > 0 then
-        for i = 1, #who.input_handlers do
-          local h = who.input_handlers[i]
-          if h and h.on then h.on(h, who, snapshot, input, dt) end
-        end
-      else
-        self._h_character.on(self._h_character, who, snapshot, input, dt)
-        self._h_inventory.on(self._h_inventory, who, snapshot, input, dt)
-        self._h_mount.on(self._h_mount, who, snapshot, input, dt)
+    -- Ensure per-entity handlers based on components, then run them
+    if who then Profiles.ensure(who) end
+    if who and who.input_handlers and #who.input_handlers > 0 then
+      for i = 1, #who.input_handlers do
+        local h = who.input_handlers[i]
+        if h and h.on then h.on(h, who, snapshot, input, dt) end
       end
     end
 

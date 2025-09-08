@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Input = require('systems.input')
 local avatar = require('avatar')
+local H_character = require('input.handlers.character')
 
 describe('input routes movement to controlled avatar', function()
   it('moves only the controlled entity; Tab switches', function()
@@ -18,8 +19,8 @@ describe('input routes movement to controlled avatar', function()
 
     local input = Input()
     local w = tiny.world(input)
-    local e1 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100 }
-    local e2 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100 }
+    local e1 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100, input_handlers = { H_character({}) } }
+    local e2 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100, input_handlers = { H_character({}) } }
     w:add(e1); w:add(e2)
     -- Select e1
     avatar.set(w, e1)
@@ -41,4 +42,3 @@ describe('input routes movement to controlled avatar', function()
     assert.is_true(e2.vel.x < 0)
   end)
 end)
-

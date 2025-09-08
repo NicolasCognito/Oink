@@ -27,6 +27,7 @@ return function(opts)
   opts = opts or {}
   return {
     channel = 'actor',
+    kind = 'inventory',
     on = function(self, who, ctx, input, dt)
       if not who or not who.inventory then return end
       local inv = who.inventory
@@ -61,4 +62,3 @@ return function(opts)
     end
   }
 end
-

@@ -6,6 +6,7 @@ return function(opts)
   local friction = opts.friction or 120
   return {
     channel = 'actor',
+    kind = 'vehicle',
     on = function(self, who, ctx, input, dt)
       if not who or not who.pos or not who.vel then return end
       who._veh = who._veh or { speed = 0, heading = who.heading or 0 }
@@ -33,4 +34,3 @@ return function(opts)
     end
   }
 end
-

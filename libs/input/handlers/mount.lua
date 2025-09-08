@@ -5,6 +5,7 @@ return function(opts)
   local cooldown = opts.cooldown or 0.2
   return {
     channel = 'actor',
+    kind = 'mount',
     on = function(self, who, ctx, input, dt)
       self._cd = math.max(0, (self._cd or 0) - (dt or 0))
       if self._cd > 0 then return end
@@ -22,4 +23,3 @@ return function(opts)
     end
   }
 end
-
