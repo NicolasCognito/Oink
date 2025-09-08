@@ -7,11 +7,12 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 local TV = require('Zones.time_vortex')
 
 describe('time vortex zone', function()
   it('applies and restores time_scale on enter/exit', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = TV.new(0,0,20,20, { scale = 2.0 })
     z.on_tick = TV.on_tick
     local agent = { agent=true, pos={x=30,y=30}, vel={x=0,y=0}, time_scale = 1.3 }

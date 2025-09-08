@@ -8,11 +8,12 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local ZoneCollect = require('systems.zone_collect')
+local Context = require('systems.context_provider')
 local Inventory = require('inventory')
 
 describe('zone_collect collect_query override', function()
   it('uses zone.collect_query to limit candidates', function()
-    local w = tiny.world(Zones(), ZoneCollect())
+    local w = tiny.world(Context(), Zones(), ZoneCollect())
     local zone = { zone=true, rect={x=0,y=0,w=20,h=20}, collector=true, inventory=Inventory.new(100) }
     -- collect_query returns empty set; nothing should be absorbed
     function zone.collect_query(self, ctx) return {} end
@@ -26,4 +27,3 @@ describe('zone_collect collect_query override', function()
     assert.are.equal(0, zone.inventory.count)
   end)
 end)
-

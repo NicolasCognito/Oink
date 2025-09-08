@@ -8,11 +8,12 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local ZoneCollect = require('systems.zone_collect')
+local Context = require('systems.context_provider')
 local Vault = require('Zones.vault')
 
 describe('vault zone', function()
   it('absorbs coins inside its rect into endless inventory', function()
-    local w = tiny.world(Zones(), ZoneCollect())
+    local w = tiny.world(Context(), Zones(), ZoneCollect())
     local vault = Vault.new(10, 10, 20, 20, { label = 'Vault' })
     local coin_in = { pos={x=15,y=15}, radius=1, coin=true, collectable={name='coin', value=2} }
     local coin_out = { pos={x=40,y=40}, radius=1, coin=true, collectable={name='coin', value=2} }

@@ -7,8 +7,10 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Move = require('systems.move')
-local Input = require('systems.input')
 local Context = require('systems.context_provider')
+local Minigame = require('systems.minigame')
+local Composer = require('systems.composer')
+local Input = require('systems.input')
 local CarControl = require('systems.car_control')
 local Bounds = require('systems.bounds')
 local Collect = require('systems.collect')
@@ -24,10 +26,12 @@ local QueueSpawner = require('systems.spawner')
 local function create_world()
   local world = tiny.world()
   -- Order matters:
-  -- input -> context -> zones -> zone_collect -> agents -> move -> bounds -> collectables -> collect -> destroyer -> spawner
+  -- context -> input -> zones -> zone_collect -> agents -> move -> bounds -> collectables -> collect -> destroyer -> spawner
   world:add(CoinSpawner({ interval = 0.5, margin = 10 }))
-  world:add(Input())
   world:add(Context())
+  world:add(Minigame())
+  world:add(Composer())
+  world:add(Input())
   world:add(Zones())
   world:add(ZoneCollect())
   world:add(Agents())

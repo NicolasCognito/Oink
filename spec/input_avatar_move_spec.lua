@@ -7,6 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Input = require('systems.input')
+local Context = require('systems.context_provider')
 local avatar = require('avatar')
 local H_character = require('input.handlers.character')
 
@@ -18,10 +19,11 @@ describe('input routes movement to controlled avatar', function()
     love.keyboard = { isDown = function(k) return keys[k] == true end }
 
     local input = Input()
-    local w = tiny.world(input)
+    local w = tiny.world(Context(), input)
     local e1 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100, input_handlers = { H_character({}) } }
     local e2 = { pos={x=0,y=0}, vel={x=0,y=0}, controllable=true, speed=100, input_handlers = { H_character({}) } }
     w:add(e1); w:add(e2)
+    w:update(0)
     -- Select e1
     avatar.set(w, e1)
     -- Press D (right)

@@ -1,58 +1,51 @@
-local M = {}
 local avatar = require('avatar')
-local collision = require('collision')
 
-local function default_draw_entity(e)
-  if not e.pos or not e.drawable then return end
-  local r = e.radius or 6
-  if e.color then love.graphics.setColor(e.color) end
-  love.graphics.circle('fill', e.pos.x, e.pos.y, r)
-  love.graphics.setColor(1,1,1,1)
-end
+local layerOrder = {
+  background = 0,
+  zones = 100,
+  world = 200,
+  overlay = 800,
+  ui = 1000,
+}
 
-function M.draw(world)
-  if not world or not world.entities then return end
-  -- Draw zones (rectangles) first
-  for i = 1, #world.entities do
-    local z = world.entities[i]
-    if z and z.zone and z.rect then
-      -- Base rect
-      if z.active ~= false then love.graphics.setColor(0.8, 0.2, 0.2, 0.6) else love.graphics.setColor(0.4, 0.4, 0.4, 0.4) end
-      love.graphics.rectangle('line', z.rect.x, z.rect.y, z.rect.w, z.rect.h)
-      -- Sub-colliders (if any)
-      if z.colliders and #z.colliders > 0 then
-        love.graphics.setColor(0.9, 0.9, 0.2, 0.5)
-        for ci = 1, #z.colliders do
-          local c = z.colliders[ci]
-          local kind = c.kind or 'rect'
-          if kind == 'rect' then
-            local x = z.rect.x + (c.dx or 0)
-            local y = z.rect.y + (c.dy or 0)
-            local w = c.w or 0
-            local h = c.h or 0
-            love.graphics.rectangle('line', x, y, w, h)
-          elseif kind == 'circle' then
-            local cx = z.rect.x + (c.dx or 0)
-            local cy = z.rect.y + (c.dy or 0)
-            local r = c.r or 0
-            love.graphics.circle('line', cx, cy, r)
-          end
-        end
-      end
-      love.graphics.setColor(1,1,1,1)
-      if z.label then
-        love.graphics.print(z.label, z.rect.x + 2, z.rect.y - 14)
-      end
-    end
+local function gather_drawcalls(world)
+  local calls = {}
+  local function push(layer, order, fn)
+    calls[#calls+1] = { layer = layer, order = order or 0, fn = fn }
   end
-  -- Draw entities (circles)
   for i = 1, #world.entities do
     local e = world.entities[i]
     if e then
-      default_draw_entity(e)
+      if e.draw_handlers then
+        for j = 1, #e.draw_handlers do
+          local h = e.draw_handlers[j]
+          if h and h.draw then
+            push(h.layer or 'world', h.order or 0, function() h.draw(e, love.graphics, { world = world }) end)
+          end
+        end
+      end
     end
   end
-  -- HUD: active entity label and position
+  return calls
+end
+
+local function sort_calls(a, b)
+  local la = layerOrder[a.layer] or 0
+  local lb = layerOrder[b.layer] or 0
+  if la ~= lb then return la < lb end
+  if a.order ~= b.order then return a.order < b.order end
+  return false
+end
+
+local M = {}
+
+function M.draw(world)
+  if not world or not world.entities then return end
+  local calls = gather_drawcalls(world)
+  table.sort(calls, sort_calls)
+  for i = 1, #calls do calls[i].fn() end
+
+  -- UI: active entity label and position
   local active = avatar.get(world)
   if active and active.pos then
     local who = active.label or 'Entity'
@@ -60,7 +53,7 @@ function M.draw(world)
     love.graphics.print(who .. string.format(' (x=%.0f,y=%.0f)', active.pos.x, active.pos.y), 10, 10)
   end
 
-  -- Active controller inventory HUD at bottom (fallback to first player)
+  -- UI: Active controller inventory HUD at bottom (fallback to first player)
   local holder = avatar.get(world)
   if not holder then
     for i = 1, #world.entities do
@@ -93,17 +86,17 @@ function M.draw(world)
     love.graphics.print(text, 10, h - 16)
   end
 
-  -- Slot inspector: show detailed info about the selected slot of the active holder
+  -- UI: Slot inspector
   do
-    local holder = avatar.get(world)
-    if not holder then
+    local holder2 = avatar.get(world)
+    if not holder2 then
       for i = 1, #world.entities do
         local e = world.entities[i]
-        if e and e.player and e.inventory then holder = e; break end
+        if e and e.player and e.inventory then holder2 = e; break end
       end
     end
-    if holder and holder.inventory then
-      local inv = holder.inventory
+    if holder2 and holder2.inventory then
+      local inv = holder2.inventory
       local idx = inv.active_index or 1
       local s = inv.slots and inv.slots[idx]
       love.graphics.setColor(1,1,1,1)

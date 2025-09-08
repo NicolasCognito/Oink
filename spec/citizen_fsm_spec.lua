@@ -7,6 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Agents = require('systems.agents')
+local Context = require('systems.context_provider')
 
 -- Dummy work FSM: increments a counter each update
 local WorkFSM = {
@@ -23,7 +24,7 @@ local WorkFSM = {
 describe('citizen composer fsm', function()
   it('switches from working to vacation on fatigue, then back', function()
     local Citizen = require('components.citizen')
-    local w = tiny.world(Agents())
+    local w = tiny.world(Context(), Agents())
     local c = Citizen.new({ work_def = WorkFSM, fatigue_rate = 5, rest_rate = 10, fatigue_max = 2, fatigue_min = 0.5 })
     w:add(c)
 

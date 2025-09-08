@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local ZoneCollect = require('systems.zone_collect')
+local Context = require('systems.context_provider')
 local Spawner = require('systems.spawner')
 local Collect = require('systems.collect')
 local Vault = require('Zones.vault')
@@ -16,7 +17,7 @@ local spawn = require('spawn')
 
 describe('dropping on vault', function()
   it('coin dropped on vault goes into vault, not back to player', function()
-    local w = tiny.world(Zones(), ZoneCollect(), Collect(), Spawner())
+    local w = tiny.world(Context(), Zones(), ZoneCollect(), Collect(), Spawner())
     local vault = Vault.new(0, 0, 40, 40, { label = 'Vault' })
     w:add(vault)
 
@@ -56,4 +57,3 @@ describe('dropping on vault', function()
     assert.are.equal(1, vault.inventory.count)
   end)
 end)
-

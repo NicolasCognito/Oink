@@ -7,6 +7,9 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Input = require('systems.input')
+local Composer = require('systems.composer')
+local Context = require('systems.context_provider')
+local Composer = require('systems.composer')
 local Car = require('components.car')
 local avatar = require('avatar')
 
@@ -17,10 +20,11 @@ describe('vehicle control handler', function()
     _G.love = _G.love or {}
     love.keyboard = { isDown = function(k) return keys[k] == true end }
 
-    local w = tiny.world(Input())
+    local w = tiny.world(Context(), Composer(), Input())
     local car = Car.new({ x=0, y=0 })
     car.controllable = true
     w:add(car)
+    w:update(0)
     avatar.set(w, car)
 
     -- Face right (heading=0), press W to accelerate

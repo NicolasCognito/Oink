@@ -7,12 +7,14 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local ctx = require('ctx')
+local collision = require('collision')
 local avatar_ok, avatar = pcall(require, 'avatar')
 
 return function()
   local sys = tiny.system()
 
-  function sys:preProcess(dt)
+  -- Use preWrap so it runs before any system:update in the frame
+  function sys:preWrap(dt)
     local world = self.world
     local entities = world.entities
     local snapshot = { world = world, dt = dt, _cache = {} }
@@ -35,6 +37,31 @@ return function()
     end
     if avatar_ok and avatar and avatar.get then
       snapshot.active_avatar = avatar.get(world)
+    end
+    -- Determine active zone via composite collider + priority
+    do
+      local p = snapshot.active_avatar
+      local px = p and p.pos and p.pos.x
+      local py = p and p.pos and p.pos.y
+      if px and py then
+        local best_prio, best_zone = nil, nil
+        local overlapped = {}
+        local oi = 1
+        for i = 1, #zones do
+          local z = zones[i]
+          if z and z.rect then
+            if collision.zone_any_contains_point(z, px, py) then
+              overlapped[oi] = z; oi = oi + 1
+              local pr = tonumber(z.input_priority) or 0
+              if (best_prio == nil) or (pr > best_prio) then
+                best_prio = pr; best_zone = z
+              end
+            end
+          end
+        end
+        snapshot.active_zone = best_zone
+        snapshot.active_zones = overlapped
+      end
     end
     -- Backward-compat alias (avoid using in AI):
     snapshot.player = snapshot.active_avatar or (snapshot.players and snapshot.players[1])

@@ -6,6 +6,7 @@ package.path = table.concat({
 }, ';')
 
 local tiny = require('tiny')
+local Context = require('systems.context_provider')
 local Zones = require('systems.zones')
 local Agents = require('systems.agents')
 local Move = require('systems.move')
@@ -26,14 +27,14 @@ end
 describe('chicken under time vortex', function()
   it('lays eggs roughly 2x faster with 2.0x time scale', function()
     -- baseline world (no vortex)
-    local w1 = tiny.world(Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
+    local w1 = tiny.world(Context(), Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
     local c1 = Chicken.new({ x = 10, y = 10, egg_interval = 0.2, egg_ttl = 999, speed = 0 })
     -- keep it still to reduce noise
     c1._dirx, c1._diry = 0, 0
     w1:add(c1)
 
     -- vortex world
-    local w2 = tiny.world(Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
+    local w2 = tiny.world(Context(), Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
     local z = TV.new(0, 0, 40, 40, { scale = 2.0 })
     z.on_tick = TV.on_tick
     local c2 = Chicken.new({ x = 10, y = 10, egg_interval = 0.2, egg_ttl = 999, speed = 0 })
@@ -56,7 +57,7 @@ describe('chicken under time vortex', function()
   end)
 
   it('does not advance chicken timers when time_scale = 0', function()
-    local w = tiny.world(Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
+    local w = tiny.world(Context(), Zones(), Agents(), Move(), Spawner(), Expiry(), Destroyer())
     local z = TV.new(0, 0, 40, 40, { scale = 0.0 })
     z.on_tick = TV.on_tick
     local c = Chicken.new({ x = 10, y = 10, egg_interval = 0.2, egg_ttl = 999, speed = 0 })
@@ -72,7 +73,7 @@ describe('chicken under time vortex', function()
   end)
 
   it('restores original time_scale after exiting the vortex', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = TV.new(0, 0, 20, 20, { scale = 2.0 })
     z.on_tick = TV.on_tick
     local c = Chicken.new({ x = 30, y = 30, speed = 0 })

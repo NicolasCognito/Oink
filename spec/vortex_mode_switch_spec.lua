@@ -7,11 +7,12 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 local TV = require('Zones.time_vortex')
 
 describe('time vortex mode switching', function()
   it('updates time_scale immediately for entities already inside', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local v = TV.new(0, 0, 100, 100, {
       modes = {
         { name = 'Stasis', scale = 0.3 },

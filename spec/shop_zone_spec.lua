@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local ZoneCollect = require('systems.zone_collect')
+local Context = require('systems.context_provider')
 local Spawner = require('systems.spawner')
 local Shop = require('Zones.shop')
 local Ruby = require('components.ruby')
@@ -23,7 +24,7 @@ end
 
 describe('shop zone', function()
   it('converts dropped rubies and eggs into coins', function()
-    local w = tiny.world(Zones(), ZoneCollect(), Spawner())
+    local w = tiny.world(Context(), Zones(), ZoneCollect(), Spawner())
     local shop = Shop.new(0, 0, 40, 40, { label = 'Shop', process_interval = 0.05 })
     shop.on_tick = Shop.on_tick
     w:add(shop)

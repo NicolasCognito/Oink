@@ -7,11 +7,12 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Agents = require('systems.agents')
+local Context = require('systems.context_provider')
 local ZombieDef = require('FSMs.zombie')
 
 describe('zombie with multiple players', function()
   it('chases nearest player regardless of control', function()
-    local w = tiny.world(Agents())
+    local w = tiny.world(Context(), Agents())
     local p1 = { pos={x=0,y=0}, radius=6, player=true, controllable=true, label='P1' }
     local p2 = { pos={x=100,y=0}, radius=6, player=true, controllable=true, label='P2' }
     local z = { pos={x=60,y=0}, vel={x=0,y=0}, radius=6, zombie=true, brain={ fsm_def = ZombieDef }, speed=10, aggro=200 }
@@ -30,4 +31,3 @@ describe('zombie with multiple players', function()
     assert.is_true(z.vel.x < 0)
   end)
 end)
-

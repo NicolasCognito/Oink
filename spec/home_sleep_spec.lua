@@ -8,13 +8,14 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local Agents = require('systems.agents')
+local Context = require('systems.context_provider')
 local Move = require('systems.move')
 local Citizen = require('components.citizen')
 local Home = require('Zones.home')
 
 describe('citizen goes home to sleep', function()
   it('seeks a home when fatigued and sleeps until rested', function()
-    local w = tiny.world(Zones(), Agents(), Move())
+    local w = tiny.world(Context(), Zones(), Agents(), Move())
     local home = Home.new(0, 0, 30, 20, { label = 'Home' })
     home.on_tick = Home.on_tick
     w:add(home)
@@ -36,4 +37,3 @@ describe('citizen goes home to sleep', function()
     assert.is_true((c.fatigue or 0) <= (c.fatigue_min or 0.2))
   end)
 end)
-

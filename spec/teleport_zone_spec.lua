@@ -7,13 +7,14 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 local Teleport = require('Zones.teleport')
 local Player = require('components.player')
 local Coin = require('components.coin')
 
 describe('teleport zone', function()
   it('teleports an agent on enter', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = Teleport.new(0,0,20,20, { tx = 100, ty = 200, enabled = true })
     z.on_tick = Teleport.on_tick
     local p = Player.new({ x = 10, y = 10, speed = 0 })
@@ -25,7 +26,7 @@ describe('teleport zone', function()
   end)
 
   it('teleports a collectable on enter', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = Teleport.new(0,0,20,20, { tx = 50, ty = 60, enabled = true })
     z.on_tick = Teleport.on_tick
     local c = Coin.new(10, 10, {})
@@ -36,7 +37,7 @@ describe('teleport zone', function()
   end)
 
   it('panel on right half toggles teleport via P', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = Teleport.new(0,0,20,20, { tx = 5, ty = 5, enabled = true })
     z.on_tick = Teleport.on_tick
     local p = Player.new({ x = 15, y = 10, speed = 0 }) -- right half

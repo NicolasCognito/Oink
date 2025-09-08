@@ -25,6 +25,7 @@ local Mine = require('Zones.mine')
 local Home = require('Zones.home')
 local TokenMine = require('Zones.token_mine')
 local Shop = require('Zones.shop')
+local Arcade = require('Zones.arcade')
 local Car = require('components.car')
 
 local M = {}
@@ -129,6 +130,12 @@ function M.load()
     M.shop = Shop.new(zx, zy, zw, zh, { label = 'Shop' })
     M.shop.on_tick = Shop.on_tick
     M.world:add(M.shop)
+    -- Add an Arcade zone below the shop
+    local ay = zy + zh + 10
+    M.arcade = Arcade.new(zx, ay, zw, zh, { label = 'Arcade (G: Pong)' })
+    -- Drive its tick through Zones system
+    M.arcade.on_tick = M.arcade.on_tick
+    M.world:add(M.arcade)
   end
 end
 
@@ -137,7 +144,14 @@ function M.update(dt)
 end
 
 function M.draw()
-  if M.world then Draw.draw(M.world) end
+  if M.world then
+    Draw.draw(M.world)
+    -- Draw minigame overlay on top if present
+    for i = 1, #M.world.systems do
+      local s = M.world.systems[i]
+      if s and s.kind == 'minigame' and s.draw then s:draw() end
+    end
+  end
 end
 
 return M

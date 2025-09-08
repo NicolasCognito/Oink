@@ -7,11 +7,12 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Agents = require('systems.agents')
+local Context = require('systems.context_provider')
 local ZombieDef = require('FSMs.zombie')
 
 describe('zombie fsm', function()
   it('idles when far and chases when near', function()
-    local w = tiny.world(Agents())
+    local w = tiny.world(Context(), Agents())
     local player = { pos = {x=0,y=0}, radius=6, player=true }
     local zombie = { pos = {x=200,y=0}, vel={x=0,y=0}, radius=6, zombie=true, brain={ fsm_def = ZombieDef }, speed=10, aggro=50 }
     w:add(player)

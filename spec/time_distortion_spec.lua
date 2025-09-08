@@ -7,11 +7,12 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 local TD = require('Zones.time_distortion')
 
 describe('time distortion zone', function()
   it('slows agents on enter and restores on exit', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = TD.new(0,0,20,20, { factor = 0.5 })
     z.on_tick = TD.on_tick
     local agent = { agent=true, pos={x=30,y=30}, vel={x=0,y=0}, speed = 100 }
@@ -34,4 +35,3 @@ describe('time distortion zone', function()
     assert.are.equal(100, agent.speed)
   end)
 end)
-

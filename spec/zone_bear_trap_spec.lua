@@ -7,10 +7,11 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 
 describe('bear trap zone', function()
   it('kills first agent entering and deactivates', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
 local BearTrap = require('Zones.bear_trap')
 local trap = BearTrap.new(10,10,20,20)
 trap.on_tick = BearTrap.on_tick

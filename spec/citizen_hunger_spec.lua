@@ -8,6 +8,7 @@ package.path = table.concat({
 local tiny = require('tiny')
 local Zones = require('systems.zones')
 local Agents = require('systems.agents')
+local Context = require('systems.context_provider')
 local Move = require('systems.move')
 local Collect = require('systems.collect')
 local Spawner = require('systems.spawner')
@@ -16,7 +17,7 @@ local Egg = require('components.egg')
 
 describe('citizen hunger behavior', function()
   it('becomes hungry, collects an egg (food), and resumes working', function()
-    local w = tiny.world(Zones(), Agents(), Move(), Collect(), Spawner())
+    local w = tiny.world(Context(), Zones(), Agents(), Move(), Collect(), Spawner())
     -- citizen with fast hunger so test is quick; not a collector by default
     local c = Citizen.new({ x = 0, y = 0, speed = 60,
       hunger_rate_work = 5.0, hunger_rate_rest = 0.0, hunger_max = 1.0, hunger_min = 0.2,

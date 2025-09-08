@@ -7,6 +7,7 @@ package.path = table.concat({
 
 local tiny = require('tiny')
 local Zones = require('systems.zones')
+local Context = require('systems.context_provider')
 local TV = require('Zones.time_vortex')
 
 local function make_counter_zone(x, y, w, h)
@@ -26,12 +27,12 @@ end
 describe('zones affected by time vortex', function()
   it('ticks ~2x faster when inside 2.0x vortex', function()
     -- baseline world with a counter zone
-    local w1 = tiny.world(Zones())
+    local w1 = tiny.world(Context(), Zones())
     local z1 = make_counter_zone(10, 10, 20, 20)
     w1:add(z1)
 
     -- world with same counter zone inside a 2.0x vortex
-    local w2 = tiny.world(Zones())
+    local w2 = tiny.world(Context(), Zones())
     local z2 = make_counter_zone(10, 10, 20, 20)
     local v = TV.new(0, 0, 100, 100, { scale = 2.0 })
     v.on_tick = TV.on_tick
@@ -48,7 +49,7 @@ describe('zones affected by time vortex', function()
   end)
 
   it('pauses zone ticking when inside 0x vortex', function()
-    local w = tiny.world(Zones())
+    local w = tiny.world(Context(), Zones())
     local z = make_counter_zone(10, 10, 20, 20)
     local v = TV.new(0, 0, 100, 100, { scale = 0.0 })
     v.on_tick = TV.on_tick

@@ -10,6 +10,8 @@ love.keyboard = love.keyboard or { isDown = function() return false end }
 
 local tiny = require('tiny')
 local Input = require('systems.input')
+local Composer = require('systems.composer')
+local Context = require('systems.context_provider')
 local avatar = require('avatar')
 
 describe('zone input priority', function()
@@ -17,7 +19,7 @@ describe('zone input priority', function()
     local keys = {}
     love.keyboard.isDown = function(k) return keys[k] == true end
 
-    local w = tiny.world(Input())
+    local w = tiny.world(Context(), Composer(), Input())
     local player = { pos={x=10,y=10}, vel={x=0,y=0}, controllable=true }
     local got = {}
     local z1 = { zone=true, rect={x=0,y=0,w=40,h=40}, input_priority=1,
@@ -25,6 +27,8 @@ describe('zone input priority', function()
     local z2 = { zone=true, rect={x=0,y=0,w=40,h=40}, input_priority=2,
       on_input=function(self, input, ctx) if input.pressed('m') then got[#got+1] = 'z2:m' end end }
     w:add(player); w:add(z1); w:add(z2)
+    local avatar = require('avatar')
+    avatar.set(w, player)
     w:update(0)
     avatar.set(w, player)
 
