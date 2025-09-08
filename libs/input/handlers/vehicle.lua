@@ -11,8 +11,8 @@ return function(opts)
       if not who or not who.pos or not who.vel then return end
       who._veh = who._veh or { speed = 0, heading = who.heading or 0 }
       local v = who._veh
-      -- Accelerate with W
-      if input.held('w') or input.held('up') then
+      -- Accelerate with W (arrows reserved for UI)
+      if input.held('w') then
         v.speed = math.min(max_speed, v.speed + accel * (dt or 0))
       else
         -- Friction when no throttle
@@ -21,8 +21,8 @@ return function(opts)
       end
       -- Turn with A/D based on current speed (turning always allowed)
       local t = 0
-      if input.held('a') or input.held('left') then t = t - 1 end
-      if input.held('d') or input.held('right') then t = t + 1 end
+      if input.held('a') then t = t - 1 end
+      if input.held('d') then t = t + 1 end
       if t ~= 0 then
         v.heading = v.heading + t * turn_rate * (dt or 0)
       end

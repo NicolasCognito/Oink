@@ -32,11 +32,12 @@ function M.build_state(prev)
     return (not v) and was
   end
 
+  -- Movement axis: WASD only (arrows reserved for UI)
   local function axis_move()
-    local up    = isdown('w') or isdown('up')
-    local down  = isdown('s') or isdown('down')
-    local left  = isdown('a') or isdown('left')
-    local right = isdown('d') or isdown('right')
+    local up    = isdown('w')
+    local down  = isdown('s')
+    local left  = isdown('a')
+    local right = isdown('d')
     local ax = (right and 1 or 0) - (left and 1 or 0)
     local ay = (down and 1 or 0) - (up and 1 or 0)
     return ax, ay
