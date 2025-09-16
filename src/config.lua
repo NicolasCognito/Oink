@@ -15,14 +15,14 @@ C.spawner = {
 
 -- Collector config
 C.collector = {
-  base_speed = 60,
+  base_speed = 600,
   pickup_radius = 8,
   deposit_radius = 8,
 }
 
 -- Vault config
 C.vault = {
-  spawn_cost = 15,
+  spawn_cost = 3,
   override_speed = 120,
   spawn_rate_multiplier = 2.0,
 }

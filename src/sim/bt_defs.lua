@@ -15,15 +15,16 @@ end)
 -- Tasks: move, pickup_coin, deposit
 bt.register_task('move', {
   validate = function(owner, p)
-    return owner and owner.pos and p and p.target ~= nil
+    -- allow nil params to follow dynamic targets like owner.target_coin
+    return owner and owner.pos
   end,
   spawn = function(owner, world, p)
     local e = {
       bt_task = true,
       task_type = 'move',
       owner = owner,
-      target = p.target, -- can be {x,y} or an entity with .pos
-      speed = p.speed,
+      target = p and p.target or nil, -- can be {x,y} or an entity with .pos; nil means dynamic
+      speed = p and p.speed or nil,
     }
     world:addEntity(e)
     return e
@@ -76,8 +77,8 @@ function M.attach_collector_bt(collector, vault)
       -- Else if we have a target coin, move and pick it up
       T.sequence{
         T.condition('has_target_coin'),
-        T.task('move', { target = collector }), -- move toward dynamic target via owner.target_coin in system
-        T.task('pickup_coin', { coin = collector }),
+        T.task('move'), -- move toward dynamic owner.target_coin
+        T.task('pickup_coin'),
       },
       -- Fallback: idle near vault (small nudge)
       T.task('move', { target = vault.pos }),

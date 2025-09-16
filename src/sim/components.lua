@@ -42,6 +42,23 @@ function M.new_coin(opts)
   }
 end
 
+function M.new_fool(opts)
+  opts = opts or {}
+  return {
+    fool = true,
+    pos = { x = opts.x or 0, y = opts.y or 0 },
+    wander = {
+      speed = opts.speed or 80,
+      dirx = 0, diry = 0,
+      t = 0,
+    },
+    always_pick = opts.always_pick or false,
+    sense_radius = opts.sense_radius or 120,
+    steal_radius = opts.steal_radius or 18,
+    steal_chance = opts.steal_chance or 0.5,
+  }
+end
+
 function M.new_spawner(opts)
   opts = opts or {}
   return {

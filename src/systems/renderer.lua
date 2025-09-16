@@ -6,16 +6,21 @@ local function draw_world(self)
   local major = (love.getVersion and select(1, love.getVersion())) or 11
   local function col(r, g1, b, a)
     if major < 11 then
-      g.setColor(r * 255, g1 * 255, b * 255, (a or 1) * 255)
+      g.setColor((r or 1) * 255, (g1 or 1) * 255, (b or 1) * 255, (a or 1) * 255)
     else
-      g.setColor(r, g1, b, a)
+      g.setColor(r or 1, g1 or 1, b or 1, a or 1)
     end
   end
-  if major < 11 then
-    g.clear(0.08 * 255, 0.08 * 255, 0.1 * 255, 255)
-  else
-    g.clear(0.08, 0.08, 0.1)
+  -- Set background color in a version-safe way
+  if love.graphics.setBackgroundColor then
+    if major < 11 then
+      love.graphics.setBackgroundColor(0.08 * 255, 0.08 * 255, 0.1 * 255, 255)
+    else
+      love.graphics.setBackgroundColor(0.08, 0.08, 0.1, 1)
+    end
   end
+  -- Clear with current background color (works across versions)
+  g.clear()
   col(1,1,1,1)
   g.print('Space: switch Vault mode', 10, 10)
 
@@ -48,10 +53,19 @@ local function draw_world(self)
       end
     end
   end
+
+  -- Draw fools
+  for _, e in ipairs(self.world.entities) do
+    if e.fool and e.pos then
+      col(1.0, 0.4, 0.4, 1)
+      g.circle('line', e.pos.x, e.pos.y, 6)
+    end
+  end
 end
 
 return function()
-  local sys = { name = 'RendererSystem', kind = 'renderer', nocache = true }
+  local tiny = require('tiny')
+  local sys = tiny.system({ name = 'RendererSystem', kind = 'renderer', nocache = true })
   function sys:onAddToWorld(world) self.world = world end
   function sys:draw() draw_world(self) end
   return sys

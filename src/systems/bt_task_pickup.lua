@@ -8,7 +8,7 @@ local function process(self, task, dt)
   local owner = task.owner
   if not owner or not owner.pos then task.task_complete = true; task.task_result = bt.FAILURE; return end
   local coin = owner.target_coin
-  if not coin or not coin.pos then task.task_complete = true; task.task_result = bt.FAILURE; return end
+  if not coin or not coin.pos or coin._dead then task.task_complete = true; task.task_result = bt.FAILURE; return end
 
   local dx, dy = coin.pos.x - owner.pos.x, coin.pos.y - owner.pos.y
   local d2 = dx * dx + dy * dy
@@ -16,6 +16,7 @@ local function process(self, task, dt)
   if d2 <= rad * rad then
     -- pick up: remove coin and set carrying
     owner.carrying = { value = (coin.coin and coin.coin.value) or 1 }
+    coin._dead = true
     self.world:removeEntity(coin)
     task.task_complete = true
     task.task_result = bt.SUCCESS
