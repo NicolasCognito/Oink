@@ -1,149 +1,144 @@
-# Oink Dev Cheatsheet (LÖVE + tiny-ecs + busted)
+# Dev Cheatsheet (LÖVE + tiny-ecs + busted)
 
-This repo is set up to develop game logic with tiny-ecs, run the game in LÖVE, and test logic headlessly with busted.
+This project skeleton supports building LÖVE games with tiny-ecs and testing game logic headlessly with busted. The notes below are framework-agnostic so you can plug in any game idea without changing the tooling.
 
 ## What’s Set Up
 - Local Lua toolchain under `./.lua` (via hererocks) with Lua 5.4, LuaRocks, busted, and luacov.
-- tiny-ecs vendored in `libs/` and used by systems/world.
-- Game orchestration split into modules (game/world/components/systems).
-- Tests run without LÖVE; only effect systems (e.g., input, draw) need `love.*`.
+- tiny-ecs vendored in `libs/` for entities/systems/world management.
+- A conventional split into `game/world/components/systems` modules.
+- Tests run outside LÖVE; only effect systems (e.g., input, draw) need `love.*`.
 
-## Core Systems
-- Context: builds a per-frame snapshot (`src/ctx.lua`) and shares it with systems. Provided by `systems/context_provider.lua`.
-- Agents: single system that runs per-entity FSM “brains”. Each agent has `brain = { fsm_def = require('FSMs.<name>') }`; the system reads `ctx` and steps `libs/fsm.lua` for every agent.
-- Zones: generic system that reads `ctx` and invokes zone callbacks; no zone-specific logic here.
-
-## Project Layout
-- `main.lua`: LÖVE entry. Sets require paths, delegates to `src/game.lua`.
-- `src/game.lua`: Orchestrates world lifecycle (`Game.load/update/draw`).
-- `src/world.lua`: Builds tiny-ecs world; registers systems.
-- `src/ctx.lua`: Per-frame context module (`set/get` + lazy snapshot builder).
+## Project Layout (Generic)
+- `main.lua`: LÖVE entry. Extends require paths and delegates to `src/game.lua`.
+- `src/game.lua`: High-level game lifecycle (`Game.load/update/draw`).
+- `src/world.lua`: Creates the tiny-ecs world and registers systems in a deliberate order.
 - `src/components/`: Component factories (plain data tables).
-- `src/FSMs/`: Declarative FSMs for agents (e.g., `zombie.lua`, `tax_collector.lua`).
-- `src/systems/`: Systems (prefer pure logic; effect systems may use `love.*`).
-  - `context_provider.lua`: Produces `ctx` each frame.
-  - `agents.lua`: Runs FSM brains with a per-frame context.
-  - `zones.lua`: Calls zone callbacks with a per-frame context.
-  - `zone_collect.lua`: Generic absorption of collectables by rectangular zones with `collector` + `inventory`.
-  - `coin_spawner.lua`: Periodic coin spawning.
-  - `spawner.lua`: Drains queued spawn requests.
-  - `destroyer.lua`: Removes entities marked for destruction.
-- `libs/`: Vendored libraries (tiny-ecs at `libs/tiny.lua`).
-- `spec/`: Busted tests (`spec/support/love_stub.lua` available if needed).
-- `.busted`: Configures search paths and uses `./.lua/bin/lua`.
+- `src/systems/`: Systems. Prefer pure logic; keep `love.*` calls in dedicated effect systems.
+- `libs/`: Vendored libraries (e.g., `libs/tiny.lua`).
+- `spec/`: Busted tests (optionally use `spec/support/love_stub.lua` to stub LÖVE).
+- `.busted`: Busted config pointing to the local Lua and search paths.
 
-## Running Things
-- Run game: `love .` (from repo root).
-- Run tests: `.lua/bin/busted -c` (uses `.busted` config and prints coverage if available).
-- Run tests (gtest fallback): `.lua/bin/busted -c -v -o gtest` (use if failures are unclear or output is sparse).
-- Run tests via wrapper: `bash scripts/test [--out scripts/test-results.txt] [--gtest] [spec/filter]`
-  - Writes results to `scripts/test-results.txt` by default (keeps repo root clean).
-  - Pass `--gtest` to use the gtest reporter.
-  - Any additional args are forwarded to busted (e.g., `spec/move_spec.lua`).
-  - Make targets:
-    - `make test` → runs all specs, writes to `scripts/test-results.txt`.
-    - `make test-gtest` → runs with gtest reporter.
-    - `make spec FILE=spec/move_spec.lua` → single spec.
-    - Override output: `make test OUT=tmp/results.txt`.
-
-## FSM Composition (Citizen)
-- Multi-FSM support: use `libs/fsm_multi.lua` to host multiple child FSMs per entity under named keys.
-  - `ensure(entity, key, def[, opts])`: create/reset a child FSM.
-  - `step(entity, key, ctx, dt)`: tick a child FSM (update + transitions).
-  - `reset/get/in_state`: utility helpers.
-- Composer FSM: `src/FSMs/citizen.lua` combines a “work” FSM with a “vacation” FSM based on fatigue.
-  - working: runs the provided `work_def` (e.g., `FSMs.tax_collector`) and accumulates `e.fatigue`.
-  - vacation: runs `FSMs.vacationer` to reduce `e.fatigue` (rest/wander) until recovered.
-- Factory: `src/components/citizen.lua`
-  - Example: `Citizen.new({ work_def = require('FSMs.tax_collector'), fatigue_rate=1, rest_rate=4, fatigue_max=10, fatigue_min=2 })`
-  - This composes behaviors without modifying the original work FSM.
-- Install a Lua rock locally: `.lua/bin/luarocks install <rock>`.
+## Running
+- Run game: `love .`
+- Run tests: `.lua/bin/busted -c`
+- Run tests with gtest reporter: `.lua/bin/busted -c -v -o gtest`
+- Wrapper: `bash scripts/test [--out scripts/test-results.txt] [--gtest] [spec/filter]`
+  - Writes results to `scripts/test-results.txt` by default.
+  - Forwards extra args to busted (e.g., `spec/my_system_spec.lua`).
+  - Make targets: `make test`, `make test-gtest`, `make spec FILE=spec/xyz_spec.lua`.
 
 ## Module Resolution
-`main.lua` defers configuring require paths until `love.load()`. It appends:
+`main.lua` configures require paths at `love.load()` to include:
 - `src/?.lua; src/?/init.lua`
 - `libs/?.lua; libs/?/init.lua`
 - `libs/tiny-ecs/?.lua; libs/tiny-ecs/?/init.lua`
 
-Then it requires:
-- `game` (which loads `world`, systems, and components as needed)
-
-This keeps tests and LÖVE consistent.
+Then it requires `game`, which sets up the world and systems. This keeps runtime and tests aligned.
 
 ## Architectural Guidance
-- Prefer pure logic systems (no `love.*`) for simulation/state; they are easy to unit test.
-- Use effect systems for rendering/audio/input that call `love.*`.
-- Optionally stub `love` in tests using `spec/support/love_stub.lua`.
+- Prefer pure logic systems (no `love.*`) for core simulation; they are easy to unit test.
+- Isolate rendering/audio/input in effect systems that call `love.*`.
 - Keep components as plain tables (e.g., `pos`, `vel`, `sprite`).
- - System order is gameplay-dependent; define it deliberately in `world.lua`.
- - Current order (runtime): `input → context → zones → zone_collect → agents → move → bounds → collect → destroyer → spawner`.
-- Agents: attach behaviors via `brain.fsm_def`; keep stateful data on entities; use helpers.
-- Zones: keep behavior in zone files; use system-provided `ctx` to query entities.
-  - Common collection is handled by `zone_collect.lua` (rect contains collectables → inventory.add → remove item).
+- Be explicit about system order in `world.lua` based on your game loop needs.
+- If you introduce shared per-frame data, centralize it in a context module/system so it’s consistent across systems and specs.
 
-## Examples (Generic)
-- Logic systems: filters via `tiny.requireAll/Any`, updates component data.
-- Effect systems: render via `love.graphics.*`, play sounds via `love.audio.*`, read input via `love.keyboard.*`.
-- Agents: define FSMs under `src/FSMs/` and reference them in components via `brain.fsm_def`.
-- Zones: implement callbacks (`on_tick(zone, ctx)`, optional `on_update(zone, ctx)`) in `src/Zones/*`.
- - Context: access via `local C = require('ctx'); local snapshot = C.get(world, dt)`; context_provider sets it each frame.
+## ECS Rules & Best Practices
+- Stateless systems: do not keep mutable state across frames. Persist state on entities/components; use locals only within a tick.
+- Pure updates: systems map input components to output components. Side effects are limited to component changes or emitting events.
+- No cross-system coupling: systems should not call into other systems. Communicate via components or explicit queues/events.
+- Components are data: no methods, no closures, no references to `world`, systems, or `love`; keep them serializable.
+- Granularity: prefer small, orthogonal components; use tag components for boolean traits.
+- Determinism: avoid order-dependent logic. If order matters, document it and encode phases explicitly.
+- Entity lifecycle: don’t remove entities during iteration. Mark for destruction and let a dedicated system remove them at frame end.
+- Membership changes: when adding/removing components, ensure the ECS refreshes filters. In specs, `world:update(0)` flushes queues.
+- Queries: keep filters targeted (e.g., `tiny.requireAll`). Avoid full-world scans; precompute indices in a dedicated system if needed.
+- Events/messages: prefer append-only queues that a consumer drains once per frame; avoid synchronous callbacks across systems.
+- Input/IO isolation: keep rendering, audio, input, and file/network IO out of logic systems; inject data instead.
+- Time handling: drive all time-based logic from `dt` provided to systems; don’t read global clocks inside systems.
+- Randomness: inject RNG or seed globally; don’t call `math.random` ad hoc in hot loops without control.
+- Performance: minimize allocations in hot paths; reuse tables; avoid building temporary objects per entity per frame.
+- Testing: unit-test systems with minimal worlds and deterministic inputs; assert only on component state, not rendering.
+
+## Testing Patterns
+- tiny-ecs queueing: `world:add(entity)` and membership changes take effect on manage cycles.
+  - In specs, tick once more with `world:update(0)` after scheduling adds/removes to flush queues.
+- Favor pure logic in tests; stub or inject dependencies for effect systems to avoid coupling to LÖVE.
+- Reporter hint: `-o gtest` gives structured diffs and clearer failures.
 
 ## Version Notes
-- LÖVE uses LuaJIT (Lua 5.1 semantics). The local toolchain here is Lua 5.4.
-- Keep logic 5.1-compatible (avoid 5.3+ only features) to match LÖVE behavior.
-- If strict parity is needed, we can add a LuaJIT env with hererocks and point busted to it.
+- LÖVE runs LuaJIT (Lua 5.1 semantics); the local toolchain is Lua 5.4.
+- Keep game logic 5.1-compatible to match LÖVE behavior.
+- If you need strict parity, you can set up a LuaJIT hererocks tree and point busted to it.
 
 ## Limitations
-- LÖVE doesn’t truly run headless here; graphical tests are not exercised by busted.
-- Specs focus on logic; rendering/audio/input behavior is best validated in-game or with simple stubs.
-- Paths assume tiny-ecs is vendored under `libs/` (e.g., `libs/tiny.lua` or `libs/tiny-ecs/tiny.lua`). Adjust loader paths if different.
+- LÖVE itself is not exercised by specs; graphical/audio/input behavior is best validated in-game or with targeted stubs.
+- Paths assume tiny-ecs is available under `libs/` (e.g., `libs/tiny.lua`); adjust if your layout differs.
 
-## Testing Patterns and Observations
-- tiny-ecs queueing: `world:add(entity)` takes effect next manage cycle.
-  - In specs, tick once more with `world:update(0)` after updates that schedule adds/removes.
-- Effect-system isolation: provide injectable dependencies (e.g., size providers) to avoid stubbing `love`.
-- Reporter hint: for clearer failures, `-o gtest` can be used (e.g., `.lua/bin/busted -v -o gtest path/to/spec.lua`).
-- Pure logic first: prefer testing systems that avoid `love.*`; stub only when necessary.
-- FSMs: test via `systems/agents` with a minimal world; attach `brain` to test entities and assert velocity/state changes.
-- Zones: unit-test zone callbacks by constructing zones/entities and invoking the zones system; use `ctx` instead of scanning the world in zone code.
+## Tuning and Hooks
+- Make systems configurable via constructor options to decouple from LÖVE and improve testability.
+- Normalize and clamp inputs in input systems; scale by per-entity attributes where appropriate.
+- For determinism, seed RNG in `love.load()` (e.g., `math.randomseed(...)`).
+- For spawn/destroy workflows, consider using explicit queues and a dedicated system to flush them at frame end.
 
-## Tuning and Hooks (General)
-- Systems can accept options (e.g., margins, limits) to decouple them from LÖVE and improve testability.
-- Input systems typically normalize direction vectors and scale by per-entity speed.
-- Determinism: seed RNG in `love.load()` if reproducibility is needed.
-- Inventory/Collectables: attach `inventory` to collectors and `collectable={name,value}` to items; keep caps in inventory.
-- Context (`ctx`): zones system provides `{ world, dt, agents, collectables, zones, query(...) }` per frame for zone logic.
-- Spawn/Destroy:
-  - Spawn queue: `local spawn = require('spawn'); spawn.request(entity)`; `systems/spawner` drains it at end of frame.
-  - Destroy: set `entity.marked_for_destruction = true`; `systems/destroyer` removes it at end of frame.
+## Behavior Trees (tiny-bt & tiny-bt-tasks)
+### Default
+- Overview: `libs/tiny-bt.lua` provides compact behavior trees that integrate with tiny-ecs. Trees are shared assets; each entity holds a small runtime instance.
+- Require: `local bt = require('tiny-bt'); local T = bt.dsl`.
+- Build tree: `local tree = bt.build(T.selector{ T.sequence{ T.condition{name='HasTarget'}, T.action{name='Chase', params={max_speed=120}} }, T.action{name='Idle'} })`.
+- Register leaves:
+  - Condition: `bt.register_condition('HasTarget', function(ctx) return ctx.entity.target ~= nil end)`.
+  - Action: `bt.register_action('Chase', { start=function(ctx) /* init */ end, tick=function(ctx, dt) return bt.RUNNING end, abort=function(ctx) /* cleanup */ end, validate=function(ctx) return true end })`.
+- Attach to entity: `e.bt = bt.instance(tree, { tick_interval=0.05, stagger=true, name='EnemyAI' })`.
+- Add system once: `world:add(bt.system{ interval=nil })` (or set `interval` for global throttling).
+- Context fields: `ctx.world`, `ctx.entity`, `ctx.bb` (blackboard with `get/set/has`), `ctx.tree`, `ctx.node`, `ctx.params`, `ctx.state` (per-action memory table).
+- Decorators: `inverter`, `succeeder`, `failer`, `repeat_n(n)`, `until_success`, `until_failure`, `wait(seconds)`, `cooldown(seconds)`, `time_limit(seconds)`; parallel with thresholds: `T.parallel{...}, {success=n, failure=n}`.
+- Status values: `bt.SUCCESS`, `bt.FAILURE`, `bt.RUNNING`.
+- Testing: drive a tiny world with only `bt.system` and a test entity; assert on component changes or `bt.last_status(e)`; use `bt.dump_status(e)` for debugging.
+- Practices: keep actions/conditions pure; store any persistent data in `ctx.state` or entity components; avoid global singletons; prefer injected params via node `params`.
+### Tasks
+- Overview: `libs/tiny-bt-tasks.lua` is a task-based variant where leaves spawn short-lived ECS entities to do work. The BT returns RUNNING until the task entity signals completion.
+- Require: `local bt = require('tiny-bt-tasks'); local T = bt.dsl`.
+- Register task: `bt.register_task(name, { validate?(owner, params)->bool, spawn(owner, world, params)->task_entity })`.
+  - Your systems process these task entities and must set `task_complete=true` and `task_result=bt.SUCCESS|bt.FAILURE`; honor `task_cancelled` on aborts.
+- Build tree: use `T.task('name', params)` leaves alongside the same composites/decorators as default BTs.
+- Add systems: `world:add(bt.system())` plus your task systems (e.g., a MoveTaskSystem). An example `bt.move_task_system()` is included for reference.
+- Minimal example:
+  - Condition: `bt.register_condition('enemy_visible', function(owner) return owner.senses and owner.senses.enemy end)`
+  - Task: `bt.register_task('move_to', { spawn=function(owner, world, p) local e={bt_task=true, task_type='move', owner=owner, target=p, speed=p.speed or 5}; world:addEntity(e); return e end })`
+  - Tree: `local tree = bt.build(T.sequence({ T.condition('enemy_visible'), T.task('move_to', {x=4,y=2,speed=8}) }))`
+  - Wire: `agent.bt = bt.instance(tree, {tick_interval=0.05}); world:add(bt.system()); world:add(bt.move_task_system())`
+- Decorators: inverter, succeeder, failer, repeat_n, until_success, until_failure, wait(s), cooldown(s), time_limit(s). Status: `bt.SUCCESS|bt.FAILURE|bt.RUNNING`.
+- Testing: run a tiny world with `bt.system()` and only the systems your tasks need; assert on entity components or `task_result` side effects.
+
+### Editor's note
+- Before using always consult the relevant guides in docs: `docs/TINY_BT_GUIDE.md` and `docs/TINY_BT_TASKS_GUIDE.md`.
+- Use Tasks version by default; it provides clearer debugging and decouples long-running work via ECS.
+
+## FSMs
+- Overview: `libs/tiny-fsm.lua` implements simple finite state machines for mechanical/ambient logic (doors, traps, buildings, UI). Do not use for agent AI; prefer BTs there.
+- Require: `local fsm = require('tiny-fsm')`.
+- Register: `fsm.register_action('Name', { enter?, update?, exit? })`; `fsm.register_condition('Name', function(ctx) return true end)`.
+- Build machine: `local M = fsm.build({ initial='idle', states={ idle={ transitions={{if_='Cond', to='work', priority=10, interrupt=true}} }, work={ on_update=function(ctx, dt) if done then return 'idle' end end } } })`.
+- Attach + system: `e.fsm = fsm.instance(M, {tick_interval=0.05, stagger=true}); world:add(fsm.system())`.
+- Context (`ctx`) fields in actions/conditions: `world`, `entity`, `state_name`, `params` (from transition), `next_event` (from queue). Helper: `fsm.call('CondName', ctx)` calls a registered condition by name.
+- Transition semantics: interrupt transitions check first each tick, then `on_update` (may return a state name), then normal transitions (by descending `priority`).
+- External control: `fsm.set(e, 'state')` to force a switch; `fsm.push_event(e, name, data)` and `fsm.pop_event(e)` for small, per-entity event queues.
+- Scheduling: per-entity `tick_interval` or global `fsm.system{interval=...}`; seed `math.random` if you use `stagger=true` and need repeatability.
+- Testing: build a tiny world with only `fsm.system()`, tick with fixed `dt`, assert on `fsm.state(e)` and component effects.
 
 ## Troubleshooting
 - Error: `module 'tiny' not found`
   - Ensure tiny-ecs exists in `libs/` (or `libs/tiny-ecs/`).
   - Confirm `main.lua` path setup matches your layout.
 - Error starting tests: `LuaCov not found`
-  - Installed `luacov` already. If removed, run: `.lua/bin/luarocks install luacov`.
+  - Install with: `.lua/bin/luarocks install luacov`.
 - Error unpacking rocks: unzip missing
-  - System `unzip` is configured in LuaRocks. If moved, edit `.lua/etc/luarocks/config-5.4.lua` `variables.UNZIP`.
-- Busted run fails silently or output is hard to read
-  - Re-run with the gtest reporter for structured output and clearer diffs: `.lua/bin/busted -c -v -o gtest [path/to/spec.lua]`.
+  - Update `.lua/etc/luarocks/config-5.4.lua` `variables.UNZIP` or install `unzip`.
+- Busted output unclear
+  - Re-run with: `.lua/bin/busted -c -v -o gtest [path/to/spec.lua]`.
 
 ## Handy Commands
 - Run tests verbosely: `.lua/bin/busted -c -v`
-- Run only matching specs: `.lua/bin/busted -c --pattern=_spec.lua --filter='move'`
-- Print LuaRocks tree: `.lua/bin/luarocks list`
+- Filter specs: `.lua/bin/busted -c --pattern=_spec.lua --filter='name'`
+- List rocks: `.lua/bin/luarocks list`
 - Show busted version: `.lua/bin/busted --version`
-
-## Next Steps (Optional)
-- Add more systems (collision, input, animation) with pure logic where possible.
-- Split draw/audio systems to isolate `love.*` calls.
-- Consider a second world or priorities to control update/draw ordering.
-- Dynamic component changes and system membership
-  - When adding/removing components at runtime (e.g., toggling a tag like `collectable`), ensure the ECS notices the change.
-  - In Tiny-style worlds, re-adding the entity (`world:add(entity)`) marks it as changed so systems rebuild their filters.
-  - Symptoms when omitted: a system that should react to the new component (e.g., collection) does nothing until another change happens.
-
-- Collector safety and drop cooldowns
-  - Prevent self-collection: collectors should not process themselves (simple `if collector == item then skip` guard).
-  - Avoid instant re-collection after drop by setting a short `just_dropped_cd` cooldown on the dropped entity.
-  - Prefer owner- or slot-specific accept policies (e.g., cars accept only `driver`) to avoid unintended pickups.
