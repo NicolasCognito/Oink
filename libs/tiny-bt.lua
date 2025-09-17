@@ -27,7 +27,7 @@ local bt = {}
 bt.SUCCESS, bt.FAILURE, bt.RUNNING = 1, 2, 3
 
 -- Node type tags
-local SEQ, SEL, PAR, COND, ACT, DEC = 'Sequence','Selector','Parallel','Condition','Action','Decorator'
+local SEQ, SEL, PAR, COND, ACT, DEC, SUB = 'Sequence','Selector','Parallel','Condition','Action','Decorator','Subtree'
 
 -- Registries for leaf handlers
 local CONDITIONS = {}
@@ -70,8 +70,19 @@ function dsl.parallel(children, opts)
     local node = {children = children, success = opts.success, failure = opts.failure}
     return n(PAR, node)
 end
-function dsl.condition(spec) return n(COND, spec) end -- {name=..., params=?}
-function dsl.action(spec)    return n(ACT,  spec) end -- {name=..., params=?}
+function dsl.condition(spec)
+    if type(spec) == 'function' then return n(COND, { _fn = spec }) end
+    if type(spec) == 'table' and (spec.tick or spec._fn) then return n(COND, spec) end
+    return n(COND, spec) -- {name=..., params=?}
+end
+function dsl.action(spec)
+    if type(spec) == 'function' then return n(ACT, { _inline = { tick = spec } }) end
+    if type(spec) == 'table' and (spec.tick or spec._inline) then return n(ACT, spec) end
+    return n(ACT,  spec) -- {name=..., params=?}
+end
+function dsl.subtree(spec)
+    return n(SUB, { tree_ref = spec })
+end
 -- Decorators
 function dsl.inverter(child)   return n(DEC, {op='inverter', child=child}) end
 function dsl.succeeder(child)  return n(DEC, {op='succeeder', child=child}) end
@@ -103,9 +114,22 @@ function bt.build(rootSpec)
         elseif spec._family == DEC then
             rec.op = spec.op; rec.seconds = spec.seconds; rec.count = spec.count
             rec.child = add(spec.child)
-        elseif spec._family == COND or spec._family == ACT then
-            rec.name = assert(spec.name, 'leaf needs name')
-            rec.params = spec.params
+        elseif spec._family == COND then
+            if spec._fn or spec.tick then
+                rec._cond_fn = spec._fn or spec.tick
+            else
+                rec.name = assert(spec.name, 'leaf needs name')
+                rec.params = spec.params
+            end
+        elseif spec._family == ACT then
+            if spec._inline or spec.tick then
+                rec._act = spec._inline or spec -- inline action table { start?, tick, abort?, validate? }
+            else
+                rec.name = assert(spec.name, 'leaf needs name')
+                rec.params = spec.params
+            end
+        elseif spec._family == SUB then
+            rec.tree_ref = spec.tree_ref -- tree asset | function(owner)->tree
         else
             error('unknown node family: '..tostring(spec._family))
         end
@@ -177,10 +201,14 @@ function bt.system(spec)
             st.node_status[id] = nil
             local mem = st.node_mem[id]
             if mem and mem.started and nodes[id].type==ACT then
-                local act = ACTIONS[nodes[id].name]
+                local node = nodes[id]
+                local act = node._act or ACTIONS[node.name]
                 if act and act.abort then
-                    act.abort({world=sys.world, entity=st._ctx and st._ctx.entity, tree=st.tree, node=nodes[id], params=nodes[id].params, state=mem})
+                    act.abort({world=sys.world, entity=st._ctx and st._ctx.entity, tree=st.tree, node=node, params=node.params, state=mem})
                 end
+            elseif mem and nodes[id].type==SUB and mem.sub_st then
+                -- clear nested subtree instance
+                mem.sub_st = nil
             end
             st.node_mem[id] = false
             local n = nodes[id]
@@ -219,20 +247,25 @@ function bt.system(spec)
             return set_status(st, id, bt.SUCCESS)
 
         elseif n.type == SEL then
-            if not mem then mem = {i=1}; st.node_mem[id]=mem end
-            while mem.i <= #n.children do
-                local child = n.children[mem.i]
+            -- Reactive priority selector: reevaluate from first child every tick.
+            if not mem then mem = {}; st.node_mem[id]=mem end
+            for i=1,#n.children do
+                local child = n.children[i]
                 local r = tick_node(self, e, st, child, dt)
-                if r == bt.RUNNING then return set_status(st, id, bt.RUNNING) end
                 if r == bt.SUCCESS then
-                    -- reset losers so they start fresh next time
-                    for j=1,#n.children do if j~=mem.i then reset_subtree(st, n.children[j]) end end
+                    -- Reset all other children to ensure clean restart next tick.
+                    for j=1,#n.children do if j~=i then reset_subtree(st, n.children[j]) end end
                     mem.i = 1
                     return set_status(st, id, bt.SUCCESS)
+                elseif r == bt.RUNNING then
+                    -- Preempt lower-priority branches; reset them now.
+                    for j=1,#n.children do if j~=i then reset_subtree(st, n.children[j]) end end
+                    mem.i = i
+                    return set_status(st, id, bt.RUNNING)
+                else
+                    -- FAILURE: reset this child and continue to next.
+                    reset_subtree(st, child)
                 end
-                -- failure, try next
-                reset_subtree(st, child)
-                mem.i = mem.i + 1
             end
             mem.i = 1
             return set_status(st, id, bt.FAILURE)
@@ -355,13 +388,19 @@ function bt.system(spec)
             end
 
         elseif n.type == COND then
-            local cond = assert(CONDITIONS[n.name], 'unregistered condition '..tostring(n.name))
             local ctx = ctx_for(self, e, st, n)
-            local ok = cond(ctx) and true or false
+            local ok
+            if n._cond_fn then
+                ok = n._cond_fn(ctx) and true or false
+            else
+                local cond = assert(CONDITIONS[n.name], 'unregistered condition '..tostring(n.name))
+                ok = cond(ctx) and true or false
+            end
             return set_status(st, id, ok and bt.SUCCESS or bt.FAILURE)
 
         elseif n.type == ACT then
-            local act = assert(ACTIONS[n.name], 'unregistered action '..tostring(n.name))
+            local act = n._act or ACTIONS[n.name]
+            assert(act and act.tick, 'unregistered action '..tostring(n.name or '<inline>'))
             local ctx = ctx_for(self, e, st, n)
             if not mem then mem = {started=false}; st.node_mem[id]=mem end
             if not mem.started then
@@ -376,6 +415,23 @@ function bt.system(spec)
             if r ~= bt.RUNNING then
                 if r ~= bt.SUCCESS and act.abort then act.abort(ctx) end
                 st.node_mem[id] = false
+            end
+            return set_status(st, id, r)
+        elseif n.type == SUB then
+            if not mem then mem = {}; st.node_mem[id]=mem end
+            -- resolve tree
+            local tree
+            if type(n.tree_ref)=='function' then tree = n.tree_ref(e) else tree = n.tree_ref end
+            if not tree then return set_status(st, id, bt.FAILURE) end
+            if not mem.sub_st or mem.sub_st.tree ~= tree then
+                mem.sub_st = { tree = tree, node_status = {}, node_mem = {}, stack = {}, _ctx = nil }
+            end
+            local sub = mem.sub_st
+            local r = tick_node(self, e, sub, tree.root, dt)
+            if r ~= bt.RUNNING then
+                -- reset on finish
+                for i=1,#tree.nodes do sub.node_status[i]=nil; sub.node_mem[i]=false end
+                mem.sub_st = nil
             end
             return set_status(st, id, r)
         else

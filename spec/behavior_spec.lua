@@ -7,7 +7,7 @@ package.path = table.concat({
 }, ';')
 
 local World = require('world')
-local bt = require('tiny-bt-tasks')
+local bt = require('tiny-bt')
 local pos = require('components.pos')
 local vel = require('components.vel')
 local coin = require('components.coin')

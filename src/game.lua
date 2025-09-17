@@ -6,7 +6,7 @@ package.path = table.concat({
 }, ';')
 
 local World = require('world')
-local bt = require('tiny-bt-tasks')
+local bt = require('tiny-bt')
 local pos = require('components.pos')
 local vel = require('components.vel')
 local spawner = require('components.spawner')
@@ -52,8 +52,8 @@ function M.load()
   -- Zombie: chases entities with tag `living` within sense radius
   local zombie = compose(pos.new(520, 200), vel.new(0, 0))
   zombie.zombie = true
-  zombie.speed = 120
-  zombie.bt = bt.instance(ZombieTree.build({ sense_radius = 300, speed = 120 }), { name = 'ZombieBT_1' })
+  zombie.speed = 90
+  zombie.bt = bt.instance(ZombieTree.build({ sense_radius = 200, speed = 90 }), { name = 'ZombieBT_1' })
   M.world:add(zombie)
 
   -- Ensure systems/entities are registered before first draw

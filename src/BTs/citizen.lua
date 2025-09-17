@@ -1,4 +1,4 @@
-local bt = require('tiny-bt-tasks')
+local bt = require('tiny-bt')
 
 local M = {}
 
@@ -15,6 +15,9 @@ function M.build(opts)
   local T = bt.dsl
   local sense = (opts and opts.sense_radius) or 260
   local flee_dist = (opts and opts.flee_distance) or 140
+  local hysteresis = (opts and opts.hysteresis) or 40
+  local enter_dist = flee_dist
+  local exit_dist = flee_dist + hysteresis
   local flee_speed = (opts and opts.flee_speed) or 140
   local prof = (opts and opts.profession) or 'collector'
 
@@ -32,41 +35,59 @@ function M.build(opts)
 
   return bt.build(
     T.parallel({
-      -- Continuous threat acquisition: nearest 'zombie' within sense
-      T.task({
-        task_type = 'find', find = true, store = 'owner.threat', claim = false,
-        query = function(world, owner)
-          local list, n = {}, 0
-          for i = 1, #world.entities do
-            local e = world.entities[i]
-            if e and e.zombie and e.pos and not e._dead then
-              local dx, dy = e.pos.x - owner.pos.x, e.pos.y - owner.pos.y
-              if dx*dx + dy*dy <= sense * sense then
-                n = n + 1; list[n] = e
-              end
-            end
+      -- Track nearest zombie as threat
+      T.action(function(ctx, dt)
+        local w, o = ctx.world, ctx.entity
+        local best, bestd
+        for i=1,#w.entities do
+          local e = w.entities[i]
+          if e and e.zombie and e.pos and not e._dead then
+            local dx,dy = e.pos.x-o.pos.x, e.pos.y-o.pos.y
+            local d = dx*dx+dy*dy
+            if d <= sense*sense and (not bestd or d<bestd) then bestd, best = d, e end
           end
-          return list
-        end,
-        score = function(owner, e)
-          local dx, dy = e.pos.x - owner.pos.x, e.pos.y - owner.pos.y
-          return dx*dx + dy*dy
-        end,
-      }),
-      -- Behavior: if threat within flee distance -> flee; else work
+        end
+        o.threat = best
+        return bt.RUNNING
+      end),
+      -- If threat within flee distance -> flee; else work subtree
       T.selector({
         T.sequence({
-          T.task({ task_type = 'check', check = true, predicate = function(owner)
-            local th = owner.threat
-            if not (owner and owner.pos and th and th.pos) then return false end
-            local dx, dy = owner.pos.x - th.pos.x, owner.pos.y - th.pos.y
-            return (dx*dx + dy*dy) < (flee_dist * flee_dist)
-          end }),
-          T.task({ task_type = 'flee', flee = true, from = 'owner.threat', distance = flee_dist, speed = 'owner.speed' or flee_speed, radius = 12 })
+          T.condition(function(ctx)
+            local o, th = ctx.entity, ctx.entity.threat
+            if not (o and o.pos and th and th.pos) then o._fleeing = false; return false end
+            local dx,dy = o.pos.x-th.pos.x, o.pos.y-th.pos.y
+            local d2 = dx*dx+dy*dy
+            if o._fleeing then
+              return d2 < (exit_dist * exit_dist)
+            else
+              return d2 < (enter_dist * enter_dist)
+            end
+          end),
+          T.action({
+            start = function(ctx)
+              ctx.entity._fleeing = true
+            end,
+            tick = function(ctx, dt)
+              local o, th = ctx.entity, ctx.entity.threat
+              if not (o and o.pos and o.vel and th and th.pos) then o._fleeing=false; return bt.FAILURE end
+              local dx,dy = o.pos.x - th.pos.x, o.pos.y - th.pos.y
+              local d = math.sqrt(dx*dx+dy*dy)
+              if d >= exit_dist then o.vel.x,o.vel.y=0,0; o._fleeing=false; return bt.FAILURE end
+              if d <= 0 then o.vel.x,o.vel.y=0,0; return bt.RUNNING end
+              local ux,uy = dx/d, dy/d
+              local spd = o.speed or flee_speed
+              o.vel.x, o.vel.y = ux*spd, uy*spd
+              return bt.RUNNING
+            end,
+            abort = function(ctx)
+              ctx.entity._fleeing = false
+            end
+          })
         }),
         T.subtree(function(owner) return profession_tree(owner) end)
       })
-    }, { success = 2, failure = 99999 })
+    }, { success = 2 })
   )
 end
 

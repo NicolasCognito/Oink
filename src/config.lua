@@ -8,14 +8,14 @@ C.world = {
 
 -- Spawner config
 C.spawner = {
-  interval = 1.0,
-  max_alive = 50,
+  interval = 0.5, -- spawn twice as often
+  max_alive = 120, -- allow more coins alive
   area = { x_min = 0, x_max = 800, y_min = 0, y_max = 600 },
 }
 
 -- Collector config
 C.collector = {
-  base_speed = 600,
+  base_speed = 140,
   pickup_radius = 8,
   deposit_radius = 8,
 }
