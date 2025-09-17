@@ -22,17 +22,10 @@ local function draw_world(self)
   -- Clear with current background color (works across versions)
   g.clear()
   col(1,1,1,1)
-  g.print('Space: switch Vault mode', 10, 10)
+  g.print('Oink — minimal refactor (coins + move/task)', 10, 10)
 
   -- Find vault
-  local vault
-  for _, e in ipairs(self.world.entities) do if e.vault then vault = e; break end end
-  if vault then
-    col(0.2, 0.8, 0.9, 1)
-    g.rectangle('line', vault.pos.x-16, vault.pos.y-12, 32, 24)
-    col(1,1,1,1)
-    g.print(('Vault: %s  Coins: %d'):format(vault.mode or 'spawn', vault.coin_count or 0), vault.pos.x+20, vault.pos.y-10)
-  end
+  -- Vault/other UI removed in this phase
 
   -- Draw coins
   for _, e in ipairs(self.world.entities) do
@@ -42,22 +35,10 @@ local function draw_world(self)
     end
   end
 
-  -- Draw collectors
+  -- Draw any entity that has pos but isn't a coin (as a white dot)
   for _, e in ipairs(self.world.entities) do
-    if e.collector and e.pos then
-      col(0.3, 0.6, 1.0, 1)
-      g.circle('fill', e.pos.x, e.pos.y, 6)
-      if e.carrying and e.carrying ~= false then
-        col(0.9, 0.9, 0.2, 1)
-        g.circle('fill', e.pos.x+8, e.pos.y-8, 3)
-      end
-    end
-  end
-
-  -- Draw fools
-  for _, e in ipairs(self.world.entities) do
-    if e.fool and e.pos then
-      col(1.0, 0.4, 0.4, 1)
+    if e.pos and not e.coin then
+      col(1, 1, 1, 0.6)
       g.circle('line', e.pos.x, e.pos.y, 6)
     end
   end

@@ -56,6 +56,45 @@ world:addSystem(bt.move_task_system())  -- example from §6
 
 ---
 
+## 2.1) Inline (Data‑Driven) Tasks and Conditions
+
+In addition to name‑based leaves, you can embed pure data directly in nodes.
+
+### Inline tasks
+
+```lua
+-- Spawns a task entity from this payload (shallow copy) and waits for completion
+local tree = bt.build(T.sequence({
+  T.task({ task_type='move_to', move_to=true, target={x=10,y=6}, speed='owner.speed', radius=8 })
+}))
+
+-- Systems pick up by narrow filters, e.g., tiny.requireAll('bt_task','move_to')
+-- All logic (movement, picking, etc.) lives in systems that consume task entities.
+```
+
+Notes:
+- The payload is shallow‑copied; do not mutate nested tables captured from shared tree assets.
+- Functions in payloads are supported and copied by reference (Lua closures). Prefer “pure” lambdas (compute‑only).
+
+### Inline conditions (optional)
+
+```lua
+-- Provide a project evaluator to interpret condition data
+world:add(bt.system{ condition_eval = function(world, owner, data)
+  -- e.g., resolve paths or call data.fn(world, owner)
+  return data.fn and data.fn(world, owner) or false
+end })
+
+local tree = bt.build(T.selector({
+  T.condition({ fn=function(world, owner) return owner.hp and owner.hp > 0 end }),
+  T.task({ task_type='fallback', fallback=true })
+}))
+```
+
+Name‑based `register_task/condition` continue to work; you can mix styles during migration.
+
+---
+
 ## 3) DSL reference
 
 **Composites**
@@ -71,6 +110,8 @@ world:addSystem(bt.move_task_system())  -- example from §6
 
 * `condition(name, params)` → calls registered function `fn(owner, params) -> boolean`.
 * `task(name, params)` → spawns a task entity using registered task def.
+* `condition(table)` → inline condition data; requires `bt.system{ condition_eval=... }`.
+* `task(table)` → inline data payload for a task entity (no registration required).
 
 **Decorators**
 
@@ -176,6 +217,49 @@ Guidelines
 * Keep task entities minimal. Only fields the system needs.
 * Make systems idempotent per tick. Return early when complete.
 * Respect `task_cancelled` and finish cleanly.
+
+### Param Resolution Convention (recommended)
+
+To avoid rewiring systems when changing where params come from, support these forms per param:
+
+- Literal: number/table/entity
+- Function: `fn(owner, task, world) -> value`
+- Path: `'owner.target.pos'` or `{'owner','target','pos'}`
+- Descriptor: `{ from='owner'|'task'|'world', path='collector.speed', default=... }` or `{ eval=function(...) ... end }`
+
+Resolution order: descriptor → function → path → literal → system fallback paths → default.
+
+Example (move_to):
+
+```lua
+-- Resolve params
+local p = RESOLVE(task_e, owner, world, {
+  target = { fallback_paths={'owner.target.pos'} },
+  speed  = { fallback_paths={'owner.speed','owner.collector.speed'}, default=100 },
+  radius = { default=8 },
+})
+-- Use p.target (point or entity.pos), p.speed, p.radius
+```
+
+### Find Pattern (Query + Score)
+
+Long‑running selection task that re‑evaluates every frame and writes best candidate to a field.
+
+Tree node (inline data):
+
+```lua
+T.task({
+  task_type='find', find=true, claim=true, store='owner.target',
+  query=function(world, owner) return candidates end,   -- returns array
+  score=function(owner, e) return number end,          -- lower is better
+})
+```
+
+System behavior:
+- Calls `query(world, owner)` each tick; computes `score(owner, e)`; picks minimal score.
+- Writes the choice to `store` (path or `'owner.<field>'`).
+- If `claim=true`, sets `candidate.claimed_by = owner` and releases previous.
+- Usually does not complete; continuously updates the owner field.
 
 ---
 

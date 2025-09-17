@@ -110,6 +110,45 @@ Then it requires `game`, which sets up the world and systems. This keeps runtime
 - Decorators: inverter, succeeder, failer, repeat_n, until_success, until_failure, wait(s), cooldown(s), time_limit(s). Status: `bt.SUCCESS|bt.FAILURE|bt.RUNNING`.
 - Testing: run a tiny world with `bt.system()` and only the systems your tasks need; assert on entity components or `task_result` side effects.
 
+### Inline (Data‑Driven) Tasks & Conditions
+
+- Inline tasks: You can pass a table directly to `T.task({...})`. The BT spawns a task entity by shallow‑copying this table and tagging it with `bt_task`, `bt_owner`, `bt_node`.
+  - Example: `T.task({ task_type='move_to', move_to=true, target='owner.target.pos', speed='owner.speed', radius=8 })`
+  - Systems pick these up by narrow filters (e.g., `tiny.requireAll('bt_task','move_to')`). The “logic” lives entirely in systems.
+
+- Inline conditions: You can pass a table to `T.condition({...})` and provide a project‑level evaluator: `world:add(bt.system{ condition_eval=function(world, owner, data) ... end })`.
+  - Keep the library generic; interpret condition data in your own evaluator, or prefer short “check tasks” that complete immediately.
+
+- Shallow copy: Inline task payloads are shallow‑copied. Do not mutate nested tables captured from tree assets at runtime.
+
+### Find Pattern (Query + Score)
+
+- Pattern: Emit a long‑running `find` task that updates an owner field every frame based on a query and a score.
+  - Task payload: `{ task_type='find', find=true, store='owner.target', claim=true, query=function(world, owner) return {...} end, score=function(owner, e) return number end }`
+  - System behavior: `query` returns candidates; `score` ranks them (lower is better). The system writes the best to `store` and, when `claim=true`, sets `candidate.claimed_by = owner` (releasing any previous claim).
+  - Continuous: The task usually does not complete; it re‑evaluates every frame.
+
+### Parameter Resolution Convention
+
+- To avoid rewiring systems, task params can come from:
+  - Literal (number/table/entity)
+  - Function `fn(owner, task, world) -> value`
+  - Path string `'owner.target.pos'` or array `{'owner','target','pos'}`
+  - Descriptor `{ from='owner'|'task'|'world', path='collector.speed', default=... }` or `{ eval=function(...) return ... end }`
+
+- Precedence per param: descriptor → function → path → literal → system fallback paths → default.
+
+- Example (move_to system):
+  - `target`: fallback `'owner.target.pos'`; accepts `{x,y}`, entity with `.pos`, or function.
+  - `speed`: fallbacks `'owner.speed'`, `'owner.collector.speed'`; default to config base speed.
+  - `radius`: default to config pickup radius.
+
+### Performance Tips
+
+- Throttle: use `bt.instance(tree, { tick_interval=0.05 })` per entity or `bt.system{ interval=0.05 }` globally.
+- Minimize allocations: reuse buffers in hot tasks (e.g., `find`) or make `query` fill a task‑local table.
+- Keep lambdas “pure”: compute values only; leave state mutations to systems.
+
 ### Editor's note
 - Before using always consult the relevant guides in docs: `docs/TINY_BT_GUIDE.md` and `docs/TINY_BT_TASKS_GUIDE.md`.
 - Use Tasks version by default; it provides clearer debugging and decouples long-running work via ECS.

@@ -1,5 +1,7 @@
 local tiny = require('tiny')
-local comps = require('sim.components')
+local pos = require('components.pos')
+local coin = require('components.coin')
+local compose = require('components.compose').compose
 
 local function rand_range(a, b)
   return a + math.random() * (b - a)
@@ -22,8 +24,8 @@ local function process(self, spawner, dt)
     local a = spawner.area or { x_min = 0, x_max = 800, y_min = 0, y_max = 600 }
     local x = rand_range(a.x_min, a.x_max)
     local y = rand_range(a.y_min, a.y_max)
-    local c = comps.new_coin({ x = x, y = y })
-    self.world:addEntity(c)
+    local e = compose(pos.new(x, y), coin.new(1))
+    self.world:addEntity(e)
     coins = coins + 1
   end
 end

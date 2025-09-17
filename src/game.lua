@@ -6,9 +6,12 @@ package.path = table.concat({
 }, ';')
 
 local World = require('world')
-local comps = require('sim.components')
-local bt_defs = require('sim.bt_defs')
-local fsm_defs = require('sim.fsm_defs')
+local bt = require('tiny-bt-tasks')
+local pos = require('components.pos')
+local vel = require('components.vel')
+local spawner = require('components.spawner')
+local task = require('components.task')
+local compose = require('components.compose').compose
 
 local M = {}
 
@@ -20,27 +23,38 @@ function M.load()
     love.window.setMode(800, 600, { resizable = false })
   end
 
-  -- Globals & spawner
-  M.world:add(comps.new_globals())
-  local spawner = comps.new_spawner()
-  -- prime for an immediate spawn on first update
-  spawner.acc = spawner.interval
-  M.world:add(spawner)
-  M.world:add(comps.new_input())
+  -- Spawner entity (prime it for immediate spawn)
+  local s = spawner.new()
+  s.acc = s.interval
+  M.world:add(s)
 
-  -- Vault with FSM (default mode 'spawn')
-  local vault = comps.new_vault({ x = 100, y = 100 })
-  fsm_defs.attach_vault_fsm(vault)
-  M.world:add(vault)
+  -- Demo collector agent driven by a data-only behavior tree
+  local CollectorTree = require('BTs.collector')
+  local ZombieTree = require('BTs.zombie')
+  local CitizenTree = require('BTs.citizen')
+  local collector1 = compose(pos.new(160, 120), vel.new(0, 0))
+  collector1.bt = bt.instance(CollectorTree.build(), { name = 'CollectorBT_1' })
+  M.world:add(collector1)
 
-  -- One starting collector with BT
-  local c = comps.new_collector({ x = 160, y = 120 })
-  bt_defs.attach_collector_bt(c, vault)
-  M.world:add(c)
+  -- Second collector
+  local collector2 = compose(pos.new(640, 360), vel.new(0, 0))
+  collector2.bt = bt.instance(CollectorTree.build(), { name = 'CollectorBT_2' })
+  M.world:add(collector2)
 
-  -- Add a fool to occasionally steal coins
-  local fool = comps.new_fool({ x = 300, y = 200, speed = 90 })
-  M.world:add(fool)
+  -- Citizen: flees zombies, otherwise works via profession subtree (collector)
+  local citizen = compose(pos.new(320, 260), vel.new(0, 0))
+  citizen.living = true
+  citizen.profession = 'collector'
+  citizen.speed = 140
+  citizen.bt = bt.instance(CitizenTree.build({ sense_radius = 260, flee_distance = 140, flee_speed = 140 }), { name = 'CitizenBT_1' })
+  M.world:add(citizen)
+
+  -- Zombie: chases entities with tag `living` within sense radius
+  local zombie = compose(pos.new(520, 200), vel.new(0, 0))
+  zombie.zombie = true
+  zombie.speed = 120
+  zombie.bt = bt.instance(ZombieTree.build({ sense_radius = 300, speed = 120 }), { name = 'ZombieBT_1' })
+  M.world:add(zombie)
 
   -- Ensure systems/entities are registered before first draw
   M.world:refresh()

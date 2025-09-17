@@ -71,13 +71,19 @@ function dsl.parallel(children, opts)
     })
 end
 
-function dsl.condition(name, params)
-    return make_node(COND, {name = name, params = params})
+function dsl.condition(name_or_tbl, params)
+    if type(name_or_tbl) == 'table' then
+        return make_node(COND, { data = name_or_tbl })
+    end
+    return make_node(COND, {name = name_or_tbl, params = params})
 end
 
 -- Task nodes spawn entities
-function dsl.task(name, params)
-    return make_node(TASK, {name = name, params = params})
+function dsl.task(name_or_tbl, params)
+    if type(name_or_tbl) == 'table' then
+        return make_node(TASK, { data = name_or_tbl })
+    end
+    return make_node(TASK, {name = name_or_tbl, params = params})
 end
 
 -- Subtree node - executes another behavior tree
@@ -127,8 +133,12 @@ function bt.build(root_spec)
             node.tree_ref = spec.tree_ref
             node.params = spec.params
         elseif spec._family == COND or spec._family == TASK then
-            node.name = assert(spec.name, 'leaf needs name')
-            node.params = spec.params
+            if spec.data ~= nil then
+                node.data = spec.data
+            else
+                node.name = assert(spec.name, 'leaf needs name')
+                node.params = spec.params
+            end
         else
             error('unknown node family: ' .. tostring(spec._family))
         end
@@ -206,6 +216,7 @@ function bt.system(spec)
     sys.filter = spec.filter or tiny.requireAll('bt')
     sys.interval = spec.interval
     sys.name = 'BTSystem'
+    sys.condition_eval = spec.condition_eval -- optional evaluator for inline condition data
 
     function sys:onAddToWorld(world)
         self.world = world
@@ -315,12 +326,31 @@ function bt.system(spec)
             end
 
         elseif node.type == COND then
-            local cond_fn = assert(CONDITIONS[node.name], 'unregistered condition: ' .. node.name)
+            if node.data ~= nil then
+                assert(self.condition_eval, 'bt.system: inline condition requires condition_eval')
+                local ok = self.condition_eval(self.world, entity, node.data) and true or false
+                return ok and bt.SUCCESS or bt.FAILURE
+            end
+            local cond_fn = assert(CONDITIONS[node.name], 'unregistered condition: ' .. tostring(node.name))
             local ok = cond_fn(entity, node.params) and true or false
             return ok and bt.SUCCESS or bt.FAILURE
 
         elseif node.type == TASK then
-            local task_def = assert(TASKS[node.name], 'unregistered task: ' .. node.name)
+            if node.data ~= nil then
+                if not state.task_entity then
+                    -- Shallow copy data into a fresh task entity payload
+                    local src = node.data
+                    local te = {}
+                    for k, v in pairs(src) do te[k] = v end
+                    te.bt_task = true
+                    te.bt_owner = entity
+                    te.bt_node = node_id
+                    world:addEntity(te)
+                    state.task_entity = te
+                end
+                return bt.RUNNING
+            end
+            local task_def = assert(TASKS[node.name], 'unregistered task: ' .. tostring(node.name))
             if task_def.validate and not task_def.validate(entity, node.params) then
                 return bt.FAILURE
             end
