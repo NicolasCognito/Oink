@@ -61,7 +61,7 @@ end
 return function()
   local System = tiny.processingSystem()
   System.filter = tiny.requireAll('bt_task', 'chase')
-  System.name = 'Task_Chase'
+  System.name = 'task_chase'
   System.process = function(self, e, dt) return process(self, e, dt) end
   return System
 end

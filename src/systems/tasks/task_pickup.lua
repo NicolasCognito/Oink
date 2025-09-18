@@ -41,7 +41,8 @@ end
 return function()
   local System = tiny.processingSystem()
   System.filter = tiny.requireAll('bt_task', 'pickup')
-  System.name = 'Task_Pickup'
+  System.name = 'task_pickup'
   System.process = function(self, e, dt) return process(self, e, dt) end
   return System
 end
+

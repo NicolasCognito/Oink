@@ -5,7 +5,7 @@ local R = require('systems.task_util')
 return function()
   local System = tiny.processingSystem()
   System.filter = tiny.requireAll('bt_task', 'check')
-  System.name = 'Task_Check'
+  System.name = 'task_check'
 
   function System:process(task, dt)
     if task.task_complete then return end

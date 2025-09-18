@@ -11,7 +11,7 @@ end
 return function()
   local System = tiny.processingSystem()
   System.filter = tiny.requireAll('bt_task', 'halt')
-  System.name = 'Task_Halt'
+  System.name = 'task_halt'
   System.process = function(self, e, dt) return process(self, e, dt) end
   return System
 end

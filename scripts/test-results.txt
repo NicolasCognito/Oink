@@ -1,27 +1,15 @@
-Running: .lua/bin/busted -c -v -o gtest spec/behavior_spec.lua
-[==========] Running tests from scanned files.
-[----------] Global test environment setup.
-[----------] Running tests from spec/behavior_spec.lua
-[ RUN      ] spec/behavior_spec.lua:17: Collector tree finds, moves to, and picks up a coin
-[       OK ] spec/behavior_spec.lua:17: Collector tree finds, moves to, and picks up a coin (12043.81 ms)
-[ RUN      ] spec/behavior_spec.lua:36: Collector tree two collectors claim different coins when available
-[       OK ] spec/behavior_spec.lua:36: Collector tree two collectors claim different coins when available (22.83 ms)
-[ RUN      ] spec/behavior_spec.lua:51: Collector tree retargets if coin disappears
-spec/behavior_spec.lua:64: Expected to be truthy, but value was:
-(nil)
+Running: .lua/bin/busted -c -v spec/behavior_spec.lua spec/citizen_spec.lua
++++++++++-
+9 successes / 1 failure / 0 errors / 0 pending : 16.076413 seconds
+
+Failure -> spec/citizen_spec.lua @ 65
+Citizen behavior — flee and work switches from work to flee when zombie approaches, then returns to work after zombie removed
+spec/citizen_spec.lua:93: Expected objects to be the same.
+Passed in:
+(boolean) false
+Expected:
+(boolean) true
 
 stack traceback:
-	spec/behavior_spec.lua:64: in function <spec/behavior_spec.lua:51>
+	spec/citizen_spec.lua:93: in function <spec/citizen_spec.lua:65>
 
-[  FAILED  ] spec/behavior_spec.lua:51: Collector tree retargets if coin disappears (121.29 ms)
-[ RUN      ] spec/behavior_spec.lua:70: Zombie and Citizen trees citizen flees from zombie
-[       OK ] spec/behavior_spec.lua:70: Zombie and Citizen trees citizen flees from zombie (625.39 ms)
-[----------] 4 tests from spec/behavior_spec.lua (12872.86 ms total)
-
-[----------] Global test environment teardown.
-[==========] 4 tests from 1 test file ran. (12879.54 ms total)
-[  PASSED  ] 3 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] spec/behavior_spec.lua:51: Collector tree retargets if coin disappears
-
- 1 FAILED TEST
